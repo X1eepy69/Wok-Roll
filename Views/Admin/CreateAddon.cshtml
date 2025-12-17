@@ -1,0 +1,318 @@
+@model Addon
+@{
+    ViewData["Title"] = "Create Addon";
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-styles.css" />
+}
+
+<!-- Top Bar -->
+<header class="top-bar">
+    <div class="top-bar-left">
+        <div class="breadcrumb">
+            <a asp-action="Index">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <a asp-action="Menu">Menu Management</a>
+            <i class="fas fa-chevron-right"></i>
+            @if (ViewBag.SelectedMenuItem != null)
+            {
+                <a asp-action="MenuItemAddons" asp-route-MenuItemId="@ViewBag.MenuItemId">@ViewBag.SelectedMenuItem.Name</a>
+                <i class="fas fa-chevron-right"></i>
+            }
+            <span>Create Addon</span>
+        </div>
+        <h1>Create Addon</h1>
+        @if (ViewBag.SelectedMenuItem != null)
+        {
+            <p>Add customization options for <strong>@ViewBag.SelectedMenuItem.Name</strong></p>
+        }
+        else
+        {
+            <p>Add customization options for menu items</p>
+        }
+    </div>
+    <div class="top-bar-right">
+        <div class="quick-actions">
+            @if (ViewBag.SelectedMenuItem != null)
+            {
+                <a asp-action="MenuItemAddons" asp-route-MenuItemId="@ViewBag.MenuItemId" class="btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to @ViewBag.SelectedMenuItem.Name
+                </a>
+            }
+            else
+            {
+                <a asp-action="Menu" class="btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Menu
+                </a>
+            }
+        </div>
+    </div>
+</header>
+
+<!-- Floating Success Message -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="floatingSuccessMessage" class="floating-success-message">
+        <i class="fas fa-check-circle"></i>
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<!-- Floating Error Message -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div id="floatingErrorMessage" class="floating-error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<!-- Create Addon Content -->
+<section class="create-addon-content">
+    <div class="content-grid">
+        <!-- Main Form -->
+        <div class="form-section">
+            <div class="form-card">
+                <div class="form-header">
+                    <h3>
+                        <i class="fas fa-plus-circle"></i>
+                        Addon Details
+                    </h3>
+                    <p>Fill in the details for your new addon</p>
+                </div>
+                
+                <form asp-action="CreateAddon" method="post" class="create-form">
+                    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+                
+                    @if (ViewBag.SelectedMenuItem != null)
+                    {
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-utensils"></i>
+                                    Menu Item
+                                </label>
+                                <div class="selected-menu-item">
+                                    <div class="menu-item-info">
+                                        <h4>@ViewBag.SelectedMenuItem.Name</h4>
+                                        <p>@ViewBag.SelectedMenuItem.Description</p>
+                                        <span class="price">$@ViewBag.SelectedMenuItem.Price.ToString("F2")</span>
+                                    </div>
+                                </div>
+                                <input type="hidden" asp-for="MenuItemId" value="@ViewBag.MenuItemId" />
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="MenuItemId" class="form-label">
+                                    <i class="fas fa-utensils"></i>
+                                    Menu Item
+                                </label>
+                                <select asp-for="MenuItemId" class="form-select" asp-items="@(new SelectList(ViewBag.MenuItems, "Id", "Name"))">
+                                    <option value="">Select a menu item</option>
+                                </select>
+                                <span asp-validation-for="MenuItemId" class="field-validation"></span>
+                                <div class="form-help">Choose which menu item this addon applies to</div>
+                            </div>
+                        </div>
+                    }
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="Name" class="form-label">
+                                <i class="fas fa-tag"></i>
+                                Addon Name
+                            </label>
+                            <input asp-for="Name" class="form-input" placeholder="e.g., Extra Cheese, No Ice" />
+                            <span asp-validation-for="Name" class="field-validation"></span>
+                            <div class="form-help">Use clear, descriptive names for addons</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row two-columns">
+                        <div class="form-group">
+                            <label asp-for="Price" class="form-label">
+                                <i class="fas fa-dollar-sign"></i>
+                                Additional Price
+                            </label>
+                            <div class="price-input-group">
+                                <span class="currency-symbol">$</span>
+                                <input asp-for="Price" class="form-input" type="number" step="0.01" min="0" placeholder="0.00" />
+                            </div>
+                            <span asp-validation-for="Price" class="field-validation"></span>
+                            <div class="form-help">Additional cost for this addon</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-toggle-on"></i>
+                                Required
+                            </label>
+                            <div class="switch-container">
+                                <label class="switch">
+                                    <input asp-for="IsRequired" type="checkbox" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span class="switch-label">Required addon</span>
+                            </div>
+                            <div class="form-help">Required addons must be selected by customers</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="ConflictingAddons" class="form-label">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Conflicting Addons
+                            </label>
+                            <div class="conflicting-addons-container">
+                                <div class="conflicting-addons-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span>Select addons that cannot be selected together with this addon. For example, "No Ice" conflicts with "Extra Ice".</span>
+                                </div>
+                                <div class="conflicting-addons-list" id="conflictingAddonsList">
+                                    <!-- Conflicting addons will be loaded here -->
+                                    <div class="no-conflicts">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>No conflicting addons available</span>
+                                    </div>
+                                </div>
+                                <input type="hidden" asp-for="ConflictingAddons" id="conflictingAddonsInput" />
+                            </div>
+                            <div class="form-help">Optional: Select addons that conflict with this one</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i>
+                            Create Addon
+                        </button>
+                        <a asp-action="Menu" class="btn-secondary">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Auto-hide floating messages
+        document.addEventListener('DOMContentLoaded', function() {
+            const floatingMessage = document.getElementById('floatingSuccessMessage');
+            const floatingError = document.getElementById('floatingErrorMessage');
+            
+            if (floatingMessage) {
+                setTimeout(function() {
+                    floatingMessage.style.animation = 'slideOutRight 0.3s ease-in';
+                    setTimeout(function() {
+                        floatingMessage.remove();
+                    }, 300);
+                }, 3000);
+            }
+            
+            if (floatingError) {
+                setTimeout(function() {
+                    floatingError.style.animation = 'slideOutRight 0.3s ease-in';
+                    setTimeout(function() {
+                        floatingError.remove();
+                    }, 300);
+                }, 5000);
+            }
+        });
+    </script>
+    
+    
+    <script>
+        let conflictingAddons = [];
+        
+        // Load conflicting addons when menu item is selected
+        function loadConflictingAddons() {
+            const menuItemId = document.querySelector('#MenuItemId').value;
+            const selectedMenuItemId = '@ViewBag.MenuItemId';
+            
+            if (!menuItemId && !selectedMenuItemId) {
+                return;
+            }
+            
+            const itemId = menuItemId || selectedMenuItemId;
+            
+            fetch('@Url.Action("GetConflictingAddons", "Admin")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `menuItemId=${itemId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    conflictingAddons = data.addons;
+                    renderConflictingAddons();
+                } else {
+                    console.error('Error loading conflicting addons:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        
+        function renderConflictingAddons() {
+            const container = document.getElementById('conflictingAddonsList');
+            
+            if (conflictingAddons.length === 0) {
+                container.innerHTML = `
+                    <div class="no-conflicts">
+                        <i class="fas fa-check-circle"></i>
+                        <span>No conflicting addons available</span>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = conflictingAddons.map(addon => `
+                <div class="conflicting-addon-item">
+                    <input type="checkbox" 
+                           class="conflicting-addon-checkbox" 
+                           value="${addon.id}"
+                           onchange="updateConflictingAddons()">
+                    <span class="conflicting-addon-name">${addon.name}</span>
+                    <span class="conflicting-addon-price">+$${addon.price.toFixed(2)}</span>
+                </div>
+            `).join('');
+        }
+        
+        function updateConflictingAddons() {
+            const checkboxes = document.querySelectorAll('.conflicting-addon-checkbox:checked');
+            const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+            document.getElementById('conflictingAddonsInput').value = selectedIds.join(',');
+        }
+        
+        // Load conflicting addons on page load if menu item is already selected
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuItemId = document.querySelector('#MenuItemId');
+            if (menuItemId) {
+                menuItemId.addEventListener('change', loadConflictingAddons);
+                
+                // Load if already has a value
+                if (menuItemId.value) {
+                    loadConflictingAddons();
+                }
+            } else {
+                // Menu item is already selected via ViewBag
+                loadConflictingAddons();
+            }
+        });
+    </script>
+}

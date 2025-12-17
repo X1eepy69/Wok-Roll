@@ -1,0 +1,270 @@
+@model List<User>
+@{
+    ViewData["Title"] = "User Management";
+    Layout = "_AdminLayout";
+}
+
+<div class="users-management-page">
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-styles.css" />
+}
+
+<!-- Top Bar -->
+<header class="top-bar">
+    <div class="top-bar-left">
+        <div class="breadcrumb">
+            <a asp-action="Index">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>User Management</span>
+        </div>
+        <h1>User Management</h1>
+        <p>View and manage all registered users in your system</p>
+    </div>
+    <div class="top-bar-right">
+        <div class="quick-actions">
+            <button class="btn-secondary" onclick="refreshUsers()">
+                <i class="fas fa-sync-alt"></i>
+                Refresh
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- Floating Success Message -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="floatingSuccessMessage" class="floating-success-message">
+        <i class="fas fa-check-circle"></i>
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<!-- Floating Error Message -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div id="floatingErrorMessage" class="floating-error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<!-- User Stats -->
+<section class="user-stats-section">
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+                <h2>@Model.Count</h2>
+                <p>Total Users</p>
+            </div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-icon">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="stat-content">
+                <h2>@Model.Count(u => u.IsActive)</h2>
+                <p>Active Users</p>
+            </div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-icon">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <div class="stat-content">
+                <h2>@Model.Count(u => u.Role == "Admin")</h2>
+                <p>Administrators</p>
+            </div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-icon">
+                <i class="fas fa-user-friends"></i>
+            </div>
+            <div class="stat-content">
+                <h2>@Model.Count(u => u.Role == "Customer")</h2>
+                <p>Customers</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Users Table -->
+<section class="users-content">
+    <div class="content-card">
+        <div class="card-header">
+            <h3>
+                <i class="fas fa-users"></i>
+                All Users (@Model.Count)
+            </h3>
+        </div>
+        <div class="card-content">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="userSearch" placeholder="Search users..." />
+            </div>
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody">
+                            @foreach (var user in Model)
+                            {
+                                <tr data-user-id="@user.Id">
+                                    <td>
+                                        <div class="user-info">
+                                            <div class="user-avatar">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <div class="user-details">
+                                                <h4>@user.Name</h4>
+                                                <span>ID: @user.Id</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="user-email">@user.Email</span>
+                                    </td>
+                                    <td>
+                                        <span class="role-badge @(user.Role == "Admin" ? "admin" : "customer")">
+                                            @user.Role
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="status-toggle">
+                                            <input class="form-check-input user-status-toggle" 
+                                                   type="checkbox" 
+                                                   data-user-id="@user.Id"
+                                                   @(user.IsActive ? "checked" : "")>
+                                            <label class="form-check-label">
+                                                <span class="status-text">@(user.IsActive ? "Active" : "Inactive")</span>
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a asp-action="UserDetails" asp-route-id="@user.Id" 
+                                               class="action-btn view" title="View Profile">
+                                                <i class="fas fa-user-circle"></i>
+                                            </a>
+                                            <a asp-action="EditUser" asp-route-id="@user.Id" 
+                                               class="action-btn edit" title="Edit User">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>No Users Found</h3>
+                    <p>No users have been registered yet.</p>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Search functionality
+        document.getElementById('userSearch').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#userTableBody tr');
+            
+            rows.forEach(row => {
+                const userName = row.querySelector('h4').textContent.toLowerCase();
+                const userEmail = row.querySelector('.user-email').textContent.toLowerCase();
+                
+                if (userName.includes(searchTerm) || userEmail.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // Toggle user status
+        document.querySelectorAll('.user-status-toggle').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const userId = this.dataset.userId;
+                const isActive = this.checked;
+                const statusText = this.parentElement.querySelector('.status-text');
+                
+                fetch('@Url.Action("ToggleUserStatus", "Admin")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `id=${userId}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        statusText.textContent = data.isActive ? 'Active' : 'Inactive';
+                        showAlert('success', data.message);
+                    } else {
+                        // Revert toggle state
+                        this.checked = !isActive;
+                        showAlert('danger', data.message);
+                    }
+                })
+                .catch(error => {
+                    // Revert toggle state
+                    this.checked = !isActive;
+                    showAlert('danger', 'An error occurred. Please try again.');
+                });
+            });
+        });
+
+        function refreshUsers() {
+            window.location.reload();
+        }
+
+        function showAlert(type, message) {
+            // Clear any existing floating messages first
+            const existingMessages = document.querySelectorAll('.floating-success-message, .floating-error-message');
+            existingMessages.forEach(msg => {
+                msg.style.opacity = '0';
+                setTimeout(() => msg.remove(), 300);
+            });
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `floating-${type === 'success' ? 'success' : 'error'}-message`;
+            messageDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(messageDiv);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                messageDiv.style.opacity = '0';
+                setTimeout(() => messageDiv.remove(), 300);
+            }, 5000);
+        }
+    </script>
+    
+}
+
+</div>

@@ -1,0 +1,203 @@
+@model UserProfileViewModel
+@{
+    ViewData["Title"] = "User Profile";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/customer-styles.css" />
+}
+
+<div class="profile-container">
+    <div class="profile-background">
+        <div class="profile-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </div>
+    
+    <div class="profile-content">
+        <!-- Success/Error Messages -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="floating-message success">
+                <i class="fas fa-check-circle"></i>
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="floating-message error">
+                <i class="fas fa-exclamation-circle"></i>
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="profile-logo">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <h1>User Profile</h1>
+                <p>Manage your account information and preferences</p>
+                <div class="profile-actions">
+                    <a asp-controller="Customer" asp-action="Table" class="btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Tables
+                    </a>
+                </div>
+            </div>
+
+            <div class="profile-main">
+                <div class="profile-grid">
+                    <!-- Profile Information Section -->
+                    <div class="profile-section">
+                        <div class="section-header">
+                            <h3>
+                                <i class="fas fa-user"></i>
+                                Profile Information
+                            </h3>
+                        </div>
+                        <div class="section-content">
+                            <form asp-action="UpdateProfile" method="post">
+                                <input type="hidden" asp-for="UserId" />
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label asp-for="Name" class="form-label">
+                                            <i class="fas fa-user"></i>
+                                            Full Name
+                                        </label>
+                                        <input asp-for="Name" class="form-input" placeholder="Enter your full name" />
+                                        <span asp-validation-for="Name" class="validation-error"></span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label asp-for="Email" class="form-label">
+                                            <i class="fas fa-envelope"></i>
+                                            Email Address
+                                        </label>
+                                        <input asp-for="Email" class="form-input" placeholder="Enter your email" />
+                                        <span asp-validation-for="Email" class="validation-error"></span>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            <i class="fas fa-shopping-bag"></i>
+                                            Total Orders
+                                        </label>
+                                        <input type="text" class="form-input readonly" value="@Model.TotalOrders" readonly />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            <i class="fas fa-calendar"></i>
+                                            Member Since
+                                        </label>
+                                        <input type="text" class="form-input readonly" value="@Model.CreatedAt.ToString("MMMM dd, yyyy")" readonly />
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="btn-primary">
+                                        <i class="fas fa-save"></i>
+                                        Update Profile
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Change Password Section -->
+                    <div class="profile-section">
+                        <div class="section-header">
+                            <h3>
+                                <i class="fas fa-key"></i>
+                                Change Password
+                            </h3>
+                        </div>
+                        <div class="section-content">
+                            <form asp-action="UpdateProfile" method="post">
+                                <input type="hidden" asp-for="UserId" />
+                                
+                                <div class="form-group">
+                                    <label asp-for="CurrentPassword" class="form-label">
+                                        <i class="fas fa-lock"></i>
+                                        Current Password
+                                    </label>
+                                    <input asp-for="CurrentPassword" type="password" class="form-input" placeholder="Enter current password" />
+                                    <span asp-validation-for="CurrentPassword" class="validation-error"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label asp-for="NewPassword" class="form-label">
+                                        <i class="fas fa-key"></i>
+                                        New Password
+                                    </label>
+                                    <input asp-for="NewPassword" type="password" class="form-input" placeholder="Enter new password" />
+                                    <span asp-validation-for="NewPassword" class="validation-error"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label asp-for="ConfirmNewPassword" class="form-label">
+                                        <i class="fas fa-check-circle"></i>
+                                        Confirm New Password
+                                    </label>
+                                    <input asp-for="ConfirmNewPassword" type="password" class="form-input" placeholder="Confirm new password" />
+                                    <span asp-validation-for="ConfirmNewPassword" class="validation-error"></span>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="btn-warning">
+                                        <i class="fas fa-key"></i>
+                                        Change Password
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions Section -->
+                    <div class="profile-section">
+                        <div class="section-header">
+                            <h3>
+                                <i class="fas fa-bolt"></i>
+                                Quick Actions
+                            </h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="action-list">
+                                <a asp-controller="Customer" asp-action="History" class="action-link">
+                                    <i class="fas fa-history"></i>
+                                    <span>Order History</span>
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                                <a asp-controller="Account" asp-action="Logout" class="action-link danger">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Logout</span>
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-dismiss floating messages
+        setTimeout(function() {
+            const messages = document.querySelectorAll('.floating-message');
+            messages.forEach(message => {
+                message.style.opacity = '0';
+                setTimeout(() => message.remove(), 300);
+            });
+        }, 5000);
+    </script>
+}

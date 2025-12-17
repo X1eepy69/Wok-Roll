@@ -1,0 +1,117 @@
+wwwroot\css\account-styles.css
+wwwroot\css\admin-layout.css
+wwwroot\css\admin-styles.css
+wwwroot\css\customer-styles.css
+wwwroot\css\forgot-password.css
+wwwroot\css\home-styles.css
+wwwroot\css\reset-password.css
+wwwroot\css\restaurant-dining.css
+wwwroot\favicon.ico
+wwwroot\Images\Beverage\13 Units Milk Tea.jpg
+wwwroot\Images\Beverage\Almond Milk.jpg
+wwwroot\Images\Beverage\Bottle Coffee.jpg
+wwwroot\Images\Beverage\Bottle Milk Tea.jpg
+wwwroot\Images\Beverage\Coffee Without Milk.jpg
+wwwroot\Images\Beverage\Coffee.jpg
+wwwroot\Images\Beverage\Fatt Choi Milk Tea.jpg
+wwwroot\Images\Beverage\HK Americano.jpg
+wwwroot\Images\Beverage\HK Silk Milk Tea.jpg
+wwwroot\Images\Beverage\Ice Lemon Coke.jpg
+wwwroot\Images\Beverage\Ice Lemon Ribena.jpg
+wwwroot\Images\Beverage\Kid_s Yuen Yang.jpg
+wwwroot\Images\Beverage\Macha Latte.jpg
+wwwroot\Images\Beverage\Milk Tea Red Bean Ice.jpg
+wwwroot\Images\Beverage\Ovaltine.jpg
+wwwroot\Images\Beverage\Salted Lemon7upjpg.jpg
+wwwroot\Images\Beverage\Vitasoy.jpg
+wwwroot\Images\Beverage\Yuen Yang.jpg
+wwwroot\Images\Cheesy Baked Series\Baked Macaroni.jpg
+wwwroot\Images\Cheesy Baked Series\Baked Rice.jpg
+wwwroot\Images\Cheesy Baked Series\Baked Spaghetti.jpg
+wwwroot\Images\Dessert\Black Sesame Paste .jpg
+wwwroot\Images\Dessert\Glutinous Rice Ball With Crushed Peanut And Sugar.jpg
+wwwroot\Images\Dessert\Peanut Paste.jpg
+wwwroot\Images\Dim Sum\BBQ Buns 2pcs.jpg
+wwwroot\Images\Dim Sum\Deep Ried Shrimp Roll.jpg
+wwwroot\Images\Dim Sum\Prawn Dumplings 3pcs.jpg
+wwwroot\Images\Dim Sum\Salted Egg Custard Buns 2pcs.jpg
+wwwroot\Images\Dim Sum\Soybean Pork Ribs.jpg
+wwwroot\Images\Dim Sum\Spicy Phoenix Talons.jpg
+wwwroot\Images\Dim Sum\Xiumai 3pcs.jpg
+wwwroot\Images\Noodle Series\Curry Fishball Mee.jpg
+wwwroot\Images\Noodle Series\Tomato Soup Macaroni.jpg
+wwwroot\Images\Polobun\Polobun Butter with Egg and Cheese.jpg
+wwwroot\Images\Polobun\Polobun Butter With Egg and Ham.jpg
+wwwroot\Images\Polobun\Polobun Butter With Egg and Luncheon.jpg
+wwwroot\Images\Polobun\Polobun Butter With Egg And Tomato.jpg
+wwwroot\Images\Polobun\Polobun With Butter.jpg
+wwwroot\Images\Polobun\Polobun With Prok Chop.jpg
+wwwroot\Images\Polobun\Polobun.jpg
+wwwroot\Images\Rice Series\Char Siew Rice.jpg
+wwwroot\Images\Rice Series\Fried Pork Belly Egg Rice.jpg
+wwwroot\Images\Rice Series\Fried Tomato Egg Rice With Minced Pork.jpg
+wwwroot\Images\Rice Series\Lucheon Egg Rice.jpg
+wwwroot\Images\Rice Series\Shrimp Scramble Egg Rice.jpg
+wwwroot\Images\Rice Series\Swiss Chicken Chop Egg Rice.jpg
+wwwroot\Images\Rice Series\Triple Fortune Egg Rice.jpg
+wwwroot\Images\Vege Series\Black Pepper Lion Mane Rice.jpg
+wwwroot\Images\Vege Series\Curry Lion Mane RIce.jpg
+wwwroot\Images\Vege Series\Satay Lion Mane Rice.jpg
+wwwroot\Images\Vege Series\Sweet Sour Mock Fish Rice.jpg
+wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css
+wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css.map
+wwwroot\lib\bootstrap\dist\css\bootstrap-grid.min.css
+wwwroot\lib\bootstrap\dist\css\bootstrap-grid.min.css.map
+wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.css
+wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.css.map
+wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.min.css
+wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.min.css.map
+wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.css
+wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.css.map
+wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.min.css
+wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.min.css.map
+wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.css
+wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.css.map
+wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.min.css
+wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.min.css.map
+wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.css
+wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.css.map
+wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.min.css
+wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.min.css.map
+wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.css
+wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.css.map
+wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.min.css
+wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.min.css.map
+wwwroot\lib\bootstrap\dist\css\bootstrap.css
+wwwroot\lib\bootstrap\dist\css\bootstrap.css.map
+wwwroot\lib\bootstrap\dist\css\bootstrap.min.css
+wwwroot\lib\bootstrap\dist\css\bootstrap.min.css.map
+wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.css
+wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.css.map
+wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.min.css
+wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.min.css.map
+wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.js
+wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.js.map
+wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js
+wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js.map
+wwwroot\lib\bootstrap\dist\js\bootstrap.esm.js
+wwwroot\lib\bootstrap\dist\js\bootstrap.esm.js.map
+wwwroot\lib\bootstrap\dist\js\bootstrap.esm.min.js
+wwwroot\lib\bootstrap\dist\js\bootstrap.esm.min.js.map
+wwwroot\lib\bootstrap\dist\js\bootstrap.js
+wwwroot\lib\bootstrap\dist\js\bootstrap.js.map
+wwwroot\lib\bootstrap\dist\js\bootstrap.min.js
+wwwroot\lib\bootstrap\dist\js\bootstrap.min.js.map
+wwwroot\lib\bootstrap\LICENSE
+wwwroot\lib\jquery-validation-unobtrusive\jquery.validate.unobtrusive.js
+wwwroot\lib\jquery-validation-unobtrusive\jquery.validate.unobtrusive.min.js
+wwwroot\lib\jquery-validation-unobtrusive\LICENSE.txt
+wwwroot\lib\jquery-validation\dist\additional-methods.js
+wwwroot\lib\jquery-validation\dist\additional-methods.min.js
+wwwroot\lib\jquery-validation\dist\jquery.validate.js
+wwwroot\lib\jquery-validation\dist\jquery.validate.min.js
+wwwroot\lib\jquery-validation\LICENSE.md
+wwwroot\lib\jquery\dist\jquery.js
+wwwroot\lib\jquery\dist\jquery.min.js
+wwwroot\lib\jquery\dist\jquery.min.map
+wwwroot\lib\jquery\LICENSE.txt

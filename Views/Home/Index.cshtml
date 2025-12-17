@@ -1,0 +1,157 @@
+@{
+    ViewData["Title"] = "Welcome to Wok & Roll";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/home-styles.css" />
+}
+
+
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="fade-in">
+            <i class="fas fa-utensils hero-icon"></i>
+            <h1 class="hero-title">Welcome to Wok & Roll</h1>
+            <p class="hero-subtitle">Your premium restaurant dining experience with modern technology and exceptional service</p>
+            
+            <div class="d-flex justify-content-center gap-3">
+                @if (ViewBag.IsLoggedIn == true)
+                {
+                    <!-- User is logged in - show direct table access -->
+                    <a asp-controller="Customer" asp-action="Table" class="btn btn-lg hero-btn-primary">
+                        <i class="fas fa-user"></i>Start Dining
+                    </a>
+                }
+                else
+                {
+                    <!-- User is not logged in - redirect to login -->
+                    <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("Table", "Customer")" class="btn btn-lg hero-btn-primary">
+                        <i class="fas fa-user"></i>Start Dining
+                    </a>
+                    <!-- Show guest option only when not logged in -->
+                    <a asp-controller="Customer" asp-action="GuestTable" class="btn btn-lg hero-btn-secondary">
+                        <i class="fas fa-user-friends"></i>Continue as Guest
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="page-content">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Why Choose Wok & Roll?</h2>
+            <p class="section-subtitle">Experience the future of restaurant dining with our innovative features</p>
+        </div>
+
+        <div class="row">
+            <div class="col-4 mb-4">
+                <div class="card feature-card fade-in">
+                    <i class="fas fa-mobile-alt feature-icon"></i>
+                    <h4 class="feature-title">Digital Menu</h4>
+                    <p class="feature-description">Browse our extensive menu with high-quality images and detailed descriptions. Customize your order with addons and special instructions.</p>
+                </div>
+            </div>
+            
+            <div class="col-4 mb-4">
+                <div class="card feature-card fade-in">
+                    <i class="fas fa-shopping-cart feature-icon"></i>
+                    <h4 class="feature-title">Smart Ordering</h4>
+                    <p class="feature-description">Add items to your cart, review your order, and proceed to checkout seamlessly. Track your order status in real-time.</p>
+                </div>
+            </div>
+            
+            <div class="col-4 mb-4">
+                <div class="card feature-card fade-in">
+                    <i class="fas fa-credit-card feature-icon"></i>
+                    <h4 class="feature-title">Secure Payment</h4>
+                    <p class="feature-description">Pay securely with multiple payment options. Your transaction is protected with industry-standard encryption.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works Section -->
+<div class="how-it-works-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">How It Works</h2>
+            <p class="section-subtitle">Simple steps to enjoy your dining experience</p>
+        </div>
+
+        <div class="row">
+            <div class="col-3 mb-4">
+                <div class="text-center">
+                    <div class="step-number">1</div>
+                    <h4 class="step-title">Select Table</h4>
+                    <p class="step-description">Choose your preferred table and specify the number of guests</p>
+                </div>
+            </div>
+            
+            <div class="col-3 mb-4">
+                <div class="text-center">
+                    <div class="step-number">2</div>
+                    <h4 class="step-title">Browse Menu</h4>
+                    <p class="step-description">Explore our delicious menu and add items to your cart</p>
+                </div>
+            </div>
+            
+            <div class="col-3 mb-4">
+                <div class="text-center">
+                    <div class="step-number">3</div>
+                    <h4 class="step-title">Review Order</h4>
+                    <p class="step-description">Check your order details and make any final adjustments</p>
+                </div>
+            </div>
+            
+            <div class="col-3 mb-4">
+                <div class="text-center">
+                    <div class="step-number">4</div>
+                    <h4 class="step-title">Enjoy Meal</h4>
+                    <p class="step-description">Complete your payment and enjoy your delicious meal</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="cta-section">
+    <div class="container">
+        <h2 class="cta-title">Ready to Start?</h2>
+        <p class="cta-subtitle">Join thousands of satisfied customers who have experienced the future of dining</p>
+        <a asp-controller="Customer" asp-action="Table" class="btn btn-lg cta-btn">
+            <i class="fas fa-utensils"></i>Start Your Experience
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Add smooth scrolling animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        // Observe all fade-in elements
+        document.addEventListener('DOMContentLoaded', () => {
+            const fadeElements = document.querySelectorAll('.fade-in');
+            fadeElements.forEach(el => {
+                observer.observe(el);
+            });
+        });
+    </script>
+}

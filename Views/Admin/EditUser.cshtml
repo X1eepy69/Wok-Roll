@@ -1,0 +1,168 @@
+@model EditUserViewModel
+@{
+    ViewData["Title"] = "Edit User - " + Model.Name;
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-styles.css" />
+}
+
+<!-- Top Bar -->
+<header class="top-bar">
+    <div class="top-bar-left">
+        <div class="breadcrumb">
+            <a asp-action="Index">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <a asp-action="Users">User Management</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Edit User</span>
+        </div>
+        <h1>Edit User</h1>
+        <p>Update user information and settings for <strong>@Model.Name</strong></p>
+    </div>
+    <div class="top-bar-right">
+        <div class="quick-actions">
+            <a asp-action="UserDetails" asp-route-id="@Model.UserId" class="btn-primary">
+                <i class="fas fa-user-circle"></i>
+                View Details
+            </a>
+            <a asp-action="Users" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Users
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- Floating Success Message -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="floatingSuccessMessage" class="floating-success-message">
+        <i class="fas fa-check-circle"></i>
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<!-- Floating Error Message -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div id="floatingErrorMessage" class="floating-error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<!-- Edit User Content -->
+<section class="edit-user-content">
+    <div class="form-container">
+        <div class="form-card">
+            <div class="form-header">
+                <h3>
+                    <i class="fas fa-user-edit"></i>
+                    User Details
+                </h3>
+                <p>Update the user's information and settings</p>
+            </div>
+            
+            <form asp-action="EditUser" method="post" class="edit-form">
+                <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+                
+                <input type="hidden" asp-for="UserId" />
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label asp-for="Name" class="form-label">
+                            <i class="fas fa-user"></i>
+                            Full Name
+                        </label>
+                        <input asp-for="Name" class="form-input" placeholder="Enter full name" />
+                        <span asp-validation-for="Name" class="field-validation"></span>
+                        <div class="form-help">The user's display name</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label asp-for="Email" class="form-label">
+                            <i class="fas fa-envelope"></i>
+                            Email Address
+                        </label>
+                        <input asp-for="Email" class="form-input" placeholder="Enter email address" />
+                        <span asp-validation-for="Email" class="field-validation"></span>
+                        <div class="form-help">Used for login and notifications</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label asp-for="Role" class="form-label">
+                            <i class="fas fa-user-tag"></i>
+                            Role
+                        </label>
+                        <select asp-for="Role" class="form-select">
+                            <option value="Customer">Customer</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                        <span asp-validation-for="Role" class="field-validation"></span>
+                        <div class="form-help">Admin users can access all features, Customers can only place orders</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-toggle-on"></i>
+                            Account Status
+                        </label>
+                        <div class="switch-container">
+                            <label class="switch">
+                                <input type="checkbox" asp-for="IsActive" id="isActive">
+                                <span class="slider round"></span>
+                            </label>
+                            <span class="switch-label">@(Model.IsActive ? "Active" : "Inactive")</span>
+                        </div>
+                        <div class="form-help">Inactive users cannot log in to the system</div>
+                    </div>
+                </div>
+
+                <div class="form-note">
+                    <div class="note-icon">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="note-content">
+                        <strong>Important:</strong> Changing a user's role will immediately affect their access permissions. 
+                        Admin users can access all administrative functions, while Customer users can only place orders.
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i>
+                        Update User
+                    </button>
+                    <a asp-action="Users" class="btn-secondary">
+                        <i class="fas fa-times"></i>
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Update status text when toggle changes
+        document.querySelector('input[asp-for="IsActive"]').addEventListener('change', function() {
+            const statusText = document.querySelector('.status-text');
+            statusText.textContent = this.checked ? 'Active' : 'Inactive';
+        });
+    </script>
+}
+
+
+
+

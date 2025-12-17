@@ -1,0 +1,220 @@
+@model Order
+@{
+    ViewData["Title"] = $"Order #{Model.Id} Details";
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-styles.css" />
+}
+
+<div class="order-details-page">
+
+<!-- Top Bar -->
+<header class="top-bar">
+    <div class="top-bar-left">
+        <div class="breadcrumb">
+            <a asp-action="Index">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Order Details</span>
+        </div>
+        <h1>Order Details</h1>
+        <p>Order #@Model.Id - @Model.Status</p>
+    </div>
+    <div class="top-bar-right">
+        <div class="quick-actions">
+            <a asp-action="PrintOrder" asp-route-orderId="@Model.Id" class="btn-primary" target="_blank">
+                <i class="fas fa-print"></i>
+                Print Order
+            </a>
+            <a asp-action="Index" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- Floating Success Message -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="floatingSuccessMessage" class="floating-success-message">
+        <i class="fas fa-check-circle"></i>
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<!-- Floating Error Message -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div id="floatingErrorMessage" class="floating-error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<!-- Main Content -->
+<section class="content-section">
+    <div class="content-grid">
+        
+        <!-- Order Information Card -->
+        <div class="content-card">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-info-circle"></i>
+                    Order Information
+                </h3>
+            </div>
+            <div class="card-content">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Order ID:</label>
+                        <span class="info-value order-id">#@Model.Id</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Status:</label>
+                        <span class="status-badge @(Model.Status?.ToLower().Replace(" ", "-"))">@Model.Status</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Type:</label>
+                        <span class="info-value">@Model.Type</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Order Date:</label>
+                        <span class="info-value">@Model.OrderDate.ToString("MMM dd, yyyy 'at' h:mm tt")</span>
+                    </div>
+                    @if (Model.Table != null)
+                    {
+                        <div class="info-item">
+                            <label>Table:</label>
+                            <span class="info-value table-badge">Table @Model.Table.Id</span>
+                        </div>
+                    }
+                    @if (Model.User != null)
+                    {
+                        <div class="info-item">
+                            <label>Customer:</label>
+                            <span class="info-value">@Model.User.Name</span>
+                        </div>
+                    }
+                    <div class="info-item total-item">
+                        <label>Total Amount:</label>
+                        <span class="info-value total-amount">$@Model.TotalAmount.ToString("F2")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Items Card -->
+        <div class="content-card">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-utensils"></i>
+                    Order Items (@Model.Items?.Count ?? 0)
+                </h3>
+            </div>
+            <div class="card-content">
+                @if (Model.Items != null && Model.Items.Any())
+                {
+                    <div class="order-items-list">
+                        @foreach (var item in Model.Items)
+                        {
+                            <div class="order-item">
+                                <div class="item-info">
+                                    <div class="item-name">@item.MenuItem?.Name</div>
+                                    <div class="item-quantity">Qty: @item.Quantity</div>
+                                    @if (!string.IsNullOrEmpty(item.SpecialInstructions))
+                                    {
+                                        <div class="item-special">
+                                            <span class="special-label">Special Request:</span>
+                                            <span class="special-text">@item.SpecialInstructions</span>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="item-price">
+                                    $@item.Subtotal.ToString("F2")
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    
+                    <!-- Order Totals -->
+                    <div class="order-totals">
+                        <div class="total-row">
+                            <span class="total-label">Subtotal:</span>
+                            <span class="total-value">$@(Model.Items?.Sum(i => i.Subtotal).ToString("F2") ?? "0.00")</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-label">Tax (6%):</span>
+                            <span class="total-value">$@(((Model.Items?.Sum(i => i.Subtotal) ?? 0m) * 0.06m).ToString("F2"))</span>
+                        </div>
+                        <div class="total-row grand-total">
+                            <span class="total-label">Total:</span>
+                            <span class="total-value">$@Model.TotalAmount.ToString("F2")</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="fas fa-utensils"></i>
+                        <p>No items in this order.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Payment Information Card -->
+        @if (Model.Payments != null && Model.Payments.Any())
+        {
+            <div class="content-card">
+                <div class="card-header">
+                    <h3>
+                        <i class="fas fa-credit-card"></i>
+                        Payment Information
+                    </h3>
+                </div>
+                <div class="card-content">
+                    <div class="payments-list">
+                        @foreach (var payment in Model.Payments)
+                        {
+                            <div class="payment-item">
+                                <div class="payment-info">
+                                    <div class="payment-method">@payment.Method</div>
+                                    <div class="payment-date">@payment.PaymentDate.ToString("MMM dd, yyyy 'at' h:mm tt")</div>
+                                </div>
+                                <div class="payment-amount">
+                                    $@payment.Amount.ToString("F2")
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="payment-total">
+                        <span class="total-label">Total Paid:</span>
+                        <span class="total-amount">$@Model.Payments.Sum(p => p.Amount).ToString("F2")</span>
+                    </div>
+                </div>
+            </div>
+        }
+        
+    </div>
+</section>
+
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-dismiss floating messages
+        setTimeout(function() {
+            const successMsg = document.getElementById('floatingSuccessMessage');
+            const errorMsg = document.getElementById('floatingErrorMessage');
+            
+            if (successMsg) {
+                successMsg.style.display = 'none';
+            }
+            if (errorMsg) {
+                errorMsg.style.display = 'none';
+            }
+        }, 5000);
+    </script>
+}

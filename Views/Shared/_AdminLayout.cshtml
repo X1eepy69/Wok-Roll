@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Wok & Roll</title>
+    <link rel="icon" type="image/png" href="~/Images/icon.png" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/restaurant-dining.css" />
+    <link rel="stylesheet" href="~/css/admin-layout.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Persistent Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                     <img src="~/Images/logo.png" alt="Wok & Roll Logo" style="height: 40px;" class="logo-img" />
+                    <span>Wok & Roll</span>
+                </div>
+                <div class="admin-info">
+                    <div class="admin-avatar">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="admin-details">
+                        <h3>Admin</h3>
+                        <p class="admin-role">Restaurant Manager</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a asp-action="Index" asp-controller="Admin" class="nav-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a asp-action="Menu" asp-controller="Admin" class="nav-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Menu" ? "active" : "")">
+                    <i class="fas fa-utensils"></i>
+                    <span>Menu Management</span>
+                </a>
+                <a asp-action="Categories" asp-controller="Admin" class="nav-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Categories" ? "active" : "")">
+                    <i class="fas fa-tags"></i>
+                    <span>Categories</span>
+                </a>
+                <a asp-action="Users" asp-controller="Admin" class="nav-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Users" ? "active" : "")">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a asp-action="PendingOrders" asp-controller="Admin" class="nav-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "PendingOrders" ? "active" : "")">
+                    <i class="fas fa-clock"></i>
+                    <span>Pending Orders</span>
+                </a>
+                <a asp-action="TransactionHistory" asp-controller="Admin" class="nav-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "TransactionHistory" ? "active" : "")">
+                    <i class="fas fa-chart-line"></i>
+                    <span>All Transactions</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="logout-section">
+                    <a asp-action="Logout" asp-controller="Account" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                    <div class="current-time" id="currentTime"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Real-time clock
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour12: true, 
+                hour: 'numeric', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            const timeElement = document.getElementById('currentTime');
+            if (timeElement) {
+                timeElement.textContent = timeString;
+            }
+        }
+
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // Add smooth animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate elements on load
+            const animatedElements = document.querySelectorAll('.stat-card, .table-item, .menu-item-card, .content-card');
+            animatedElements.forEach((element, index) => {
+                setTimeout(() => {
+                    element.style.opacity = '0';
+                    element.style.transform = 'translateY(20px)';
+                    element.style.transition = 'all 0.6s ease';
+                    
+                    setTimeout(() => {
+                        element.style.opacity = '1';
+                        element.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 100);
+            });
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+    
+</body>
+</html>

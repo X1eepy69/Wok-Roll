@@ -1,0 +1,297 @@
+@model MenuItem
+@using DineInSystem.Models
+@{
+    ViewData["Title"] = "Edit Menu Item";
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-styles.css" />
+}
+
+<!-- Top Bar -->
+<header class="top-bar">
+    <div class="top-bar-left">
+        <div class="breadcrumb">
+            <a asp-action="Index">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <a asp-action="Menu">Menu Management</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Edit Menu Item</span>
+        </div>
+        <h1>Edit Menu Item</h1>
+        <p>@Model.Name - Update menu item details and settings</p>
+    </div>
+    <div class="top-bar-right">
+        <div class="quick-actions">
+            <a asp-action="MenuItemAddons" asp-route-MenuItemId="@Model.Id" class="btn-primary">
+                <i class="fas fa-cog"></i>
+                Manage Addons
+            </a>
+            <a asp-action="Menu" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Menu
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- Floating Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="floating-message success">
+        <i class="fas fa-check-circle"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="message-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="floating-message error">
+        <i class="fas fa-exclamation-circle"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="message-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+}
+
+<!-- Content Grid -->
+<section class="edit-menu-item-content">
+    <div class="content-grid">
+    <!-- Edit Form -->
+        <div class="content-card form-card">
+            <div class="card-header">
+            <h3>
+                <i class="fas fa-edit"></i>
+                Edit Menu Item Details
+            </h3>
+        </div>
+            <div class="card-content">
+            <form asp-action="EditMenuItem" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+                
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="ImagePath" />
+                
+                <div class="form-grid">
+                        <!-- Left Column - Main Fields -->
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label asp-for="Name" class="form-label">
+                                    <i class="fas fa-utensils"></i>
+                                    Item Name
+                                </label>
+                                <input asp-for="Name" id="name" class="form-input" placeholder="Enter item name" />
+                                <span asp-validation-for="Name" class="validation-error"></span>
+                            </div>
+                            
+                    <div class="form-group">
+                                <label asp-for="Description" class="form-label">
+                                    <i class="fas fa-align-left"></i>
+                                    Description <span class="optional-text">(Optional)</span>
+                                </label>
+                                <textarea asp-for="Description" id="description" class="form-textarea" rows="5" placeholder="Enter item description (optional)"></textarea>
+                                <span asp-validation-for="Description" class="validation-error"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                                <label asp-for="ImageFile" class="form-label">
+                                    <i class="fas fa-image"></i>
+                                    Item Image
+                                </label>
+                                <div class="file-upload-container">
+                                    <input asp-for="ImageFile" id="image" type="file" class="file-input" accept="image/*" />
+                                    <label for="image" class="file-upload-label">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <span>Choose Image</span>
+                                    </label>
+                                </div>
+                                <span asp-validation-for="ImageFile" class="validation-error"></span>
+                                <small class="form-help">Upload a new image to replace the current one</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Column - Settings -->
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label asp-for="CategoryId" class="form-label">
+                                    <i class="fas fa-tags"></i>
+                                    Category
+                                </label>
+                                <select asp-for="CategoryId" class="form-select">
+                            <option value="">Select Category</option>
+                            @if (ViewBag.Categories != null)
+                            {
+                                @foreach (var category in ViewBag.Categories as IEnumerable<Category>)
+                                {
+                                    <option value="@category.Id" selected="@(category.Id == Model.CategoryId)">@category.Name</option>
+                                }
+                            }
+                        </select>
+                                <span asp-validation-for="CategoryId" class="validation-error"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                                <label asp-for="Price" class="form-label">
+                                    <i class="fas fa-dollar-sign"></i>
+                                    Price
+                                </label>
+                                <div class="price-input-group">
+                                    <span class="currency-symbol">$</span>
+                                    <input asp-for="Price" id="price" class="form-input" placeholder="0.00" step="0.01" />
+                        </div>
+                                <span asp-validation-for="Price" class="validation-error"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-toggle-on"></i>
+                                    Availability
+                                </label>
+                                <div class="switch-container">
+                                    <label class="switch">
+                                        <input asp-for="IsAvailable" type="checkbox" />
+                                        <span class="slider"></span>
+                            </label>
+                                    <span class="switch-label">Available for ordering</span>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i>
+                        Update Menu Item
+                    </button>
+                    <a asp-action="Menu" class="btn-secondary">
+                        <i class="fas fa-times"></i>
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Current Item Preview -->
+        <div class="content-card preview-card">
+            <div class="card-header">
+            <h3>
+                <i class="fas fa-eye"></i>
+                    Live Preview
+            </h3>
+        </div>
+            <div class="card-content">
+                <div class="preview-item">
+                    <div class="preview-image-container">
+                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                {
+                            <img src="@Model.ImagePath" alt="@Model.Name" id="preview-image" class="preview-image" />
+                }
+                else
+                {
+                            <div id="preview-image-placeholder" class="image-placeholder">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                }
+            </div>
+                    <div class="preview-details">
+                        <h4 id="preview-title">@Model.Name</h4>
+                        <p id="preview-description">@Model.Description</p>
+                        <div class="preview-meta">
+                            <span id="preview-price" class="preview-price">$@Model.Price.ToString("F2")</span>
+                            <span class="preview-category">@Model.Category?.Name</span>
+                        </div>
+                        <div class="preview-status">
+                            <i class="fas @(Model.IsAvailable ? "fa-check-circle" : "fa-times-circle")"></i>
+                            <span id="preview-availability">@(Model.IsAvailable ? "Available" : "Unavailable")</span>
+                        </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Auto-dismiss floating messages
+        setTimeout(function() {
+            const messages = document.querySelectorAll('.floating-message');
+            messages.forEach(message => {
+                message.style.opacity = '0';
+                setTimeout(() => message.remove(), 300);
+            });
+        }, 5000);
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const nameInput = document.getElementById('name');
+            const descriptionInput = document.getElementById('description');
+            const priceInput = document.getElementById('price');
+            const availabilityInput = document.querySelector('input[type="checkbox"]');
+            const previewTitle = document.getElementById('preview-title');
+            const previewDescription = document.getElementById('preview-description');
+            const previewPrice = document.getElementById('preview-price');
+            const previewImage = document.getElementById('preview-image');
+            const previewImagePlaceholder = document.getElementById('preview-image-placeholder');
+            const previewAvailability = document.getElementById('preview-availability');
+            const previewStatusIcon = document.querySelector('.preview-status i');
+
+            function updatePreview() {
+                // Update title
+                if (previewTitle) {
+                    previewTitle.textContent = nameInput.value || 'Menu Item Name';
+                }
+                
+                // Update description
+                if (previewDescription) {
+                    previewDescription.textContent = descriptionInput.value || 'No description provided.';
+                }
+                
+                // Update price
+                if (previewPrice) {
+                    const price = parseFloat(priceInput.value) || 0;
+                    previewPrice.textContent = `$${price.toFixed(2)}`;
+                }
+                
+                // Update availability
+                if (previewAvailability && previewStatusIcon) {
+                    const isAvailable = availabilityInput.checked;
+                    previewAvailability.textContent = isAvailable ? 'Available' : 'Unavailable';
+                    previewStatusIcon.className = isAvailable ? 'fas fa-check-circle' : 'fas fa-times-circle';
+                }
+                
+                // Update image preview
+                const fileInput = document.getElementById('image');
+                if (fileInput && fileInput.files && fileInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        if (previewImage && previewImagePlaceholder) {
+                            previewImage.src = e.target.result;
+                            previewImage.style.display = 'block';
+                            previewImagePlaceholder.style.display = 'none';
+                        }
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                }
+            }
+
+            // Add event listeners
+            if (nameInput) nameInput.addEventListener('input', updatePreview);
+            if (descriptionInput) descriptionInput.addEventListener('input', updatePreview);
+            if (priceInput) priceInput.addEventListener('input', updatePreview);
+            if (availabilityInput) availabilityInput.addEventListener('change', updatePreview);
+            
+            const imageInput = document.getElementById('image');
+            if (imageInput) imageInput.addEventListener('change', updatePreview);
+
+            // Initial preview update
+            updatePreview();
+        });
+    </script>
+}

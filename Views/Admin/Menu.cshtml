@@ -1,0 +1,423 @@
+@model List<MenuItem>
+@using DineInSystem.Models
+@{
+    ViewData["Title"] = "Menu Management";
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-styles.css" />
+}
+
+<!-- Top Bar -->
+<header class="top-bar">
+    <div class="top-bar-left">
+        <div class="breadcrumb">
+            <a asp-action="Index">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Menu Management</span>
+        </div>
+        <h1>Menu Management</h1>
+        <p>Manage your restaurant's menu items and categories</p>
+    </div>
+    <div class="top-bar-right">
+        <div class="quick-actions">
+            <button class="btn-primary" onclick="openAddItemModal()">
+                <i class="fas fa-plus"></i>
+                Add New Item
+            </button>
+            <button class="btn-secondary" onclick="openAddonModal()">
+                <i class="fas fa-cog"></i>
+                Manage Addons
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- Floating Success Message -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="floatingSuccessMessage" class="floating-success-message">
+        <i class="fas fa-check-circle"></i>
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<!-- Filters Section -->
+<section class="filters-section">
+    <div class="filters-container">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="menuSearch" placeholder="Search menu items..." />
+        </div>
+        <div class="filter-controls">
+            <select id="categoryFilter" class="filter-select">
+                <option value="">All Categories</option>
+                @if (ViewBag.Categories != null)
+                {
+                    @foreach (var category in ((IEnumerable<Category>)ViewBag.Categories).OrderBy(c => c.DisplayOrder).ThenBy(c => c.Name))
+                    {
+                        <option value="@category.Name">@category.Name</option>
+                    }
+                }
+            </select>
+            <select id="statusFilter" class="filter-select">
+                <option value="">All Status</option>
+                <option value="available">Available</option>
+            </select>
+            <button class="clear-filters" onclick="clearFilters()">
+                <i class="fas fa-times"></i>
+                Clear
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Menu Stats -->
+<section class="menu-stats-section">
+    <div class="stats-grid">
+        <div class="stat-item">
+            <div class="stat-icon">
+                <i class="fas fa-utensils"></i>
+            </div>
+            <div class="stat-content">
+                <h3>@Model.Count</h3>
+                <p>Total Items</p>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon">
+                <i class="fas fa-eye"></i>
+            </div>
+            <div class="stat-content">
+                <h3>@Model.Count(m => m.IsAvailable)</h3>
+                <p>Available</p>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon">
+                <i class="fas fa-tags"></i>
+            </div>
+            <div class="stat-content">
+                <h3>@Model.Select(m => m.Category).Distinct().Count()</h3>
+                <p>Categories</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Menu Items Grid -->
+<section class="menu-content">
+    <div class="menu-grid" id="menuGrid">
+        @{
+            var groupedItems = Model
+                .GroupBy(item => item.Category.Name)
+                .OrderBy(group => group.First().Category.DisplayOrder)
+                .ThenBy(group => group.Key);
+        }
+        @foreach (var categoryGroup in groupedItems)
+        {
+            <div class="category-section" data-category="@categoryGroup.Key">
+                <div class="category-section-header">
+                    <h3 class="category-title">@categoryGroup.Key</h3>
+                    <div class="category-line"></div>
+                </div>
+                <div class="category-items">
+                    @foreach (var item in categoryGroup.OrderBy(i => i.Name))
+                    {
+                        <div class="menu-item-card @(item.IsAvailable ? "available" : "unavailable")" 
+                             data-name="@item.Name.ToLower()" 
+                             data-category="@item.Category.Name.ToLower()" 
+                             data-status="@(item.IsAvailable ? "available" : "unavailable")">
+                            
+                            <!-- Item Image -->
+                            <div class="item-image">
+                                @if (!string.IsNullOrEmpty(item.ImagePath))
+                                {
+                                    <img src="@item.ImagePath" alt="@item.Name" />
+                                }
+                                else
+                                {
+                                    <div class="image-placeholder">
+                                        <i class="fas fa-utensils"></i>
+                                    </div>
+                                }
+                                @if (!item.IsAvailable)
+                                {
+                                    <div class="unavailable-overlay">
+                                        <i class="fas fa-eye-slash"></i>
+                                        <span>Unavailable</span>
+                                    </div>
+                                }
+                                <div class="item-badges">
+                                    <span class="category-badge">@item.Category.Name</span>
+                                    <span class="status-badge @(item.IsAvailable ? "available" : "unavailable")">
+                                        @(item.IsAvailable ? "Available" : "Unavailable")
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Item Details -->
+                            <div class="item-details">
+                                <h3 class="item-name">@item.Name</h3>
+                                <p class="item-description">@item.Description</p>
+                                
+                                <div class="item-meta">
+                                    <div class="price-section">
+                                        <span class="item-price">$@item.Price.ToString("F2")</span>
+                                    </div>
+                                    <div class="addon-count">
+                                        <i class="fas fa-plus-circle"></i>
+                                        <span>@item.Addons.Count addons</span>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="item-actions">
+                                    <button class="action-btn edit" onclick="editItem('@item.Id')" title="Edit Item">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="action-btn addons" onclick="manageAddons('@item.Id')" title="Manage Addons">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                    <button class="action-btn @(item.IsAvailable ? "available" : "unavailable")" 
+                                            onclick="toggleAvailability('@item.Id', @item.IsAvailable.ToString().ToLower())" 
+                                            title="@(item.IsAvailable ? "Mark as Unavailable" : "Mark as Available")">
+                                        <i class="fas @(item.IsAvailable ? "fa-eye" : "fa-eye-slash")"></i>
+                                    </button>
+                                    <button class="action-btn delete" data-item-id="@item.Id" data-item-name="@item.Name" onclick="deleteItemFromButton(this)" title="Delete Item">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Item Footer -->
+                                <div class="item-footer">
+                                    <small class="created-date">
+                                        <i class="fas fa-calendar"></i>
+                                        Created: @item.CreatedAt.ToString("MMM dd, yyyy")
+                                    </small>
+                                    @if (item.UpdatedAt.HasValue)
+                                    {
+                                        <small class="updated-date">
+                                            <i class="fas fa-edit"></i>
+                                            Updated: @item.UpdatedAt.Value.ToString("MMM dd, yyyy")
+                                        </small>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-utensils"></i>
+            </div>
+            <h3>No menu items found</h3>
+            <p>Start by adding your first menu item to get started</p>
+            <button class="btn-primary" onclick="openAddItemModal()">
+                <i class="fas fa-plus"></i>
+                Add First Item
+            </button>
+        </div>
+    }
+</section>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>
+                <i class="fas fa-exclamation-triangle"></i>
+                Confirm Delete
+            </h3>
+            <button type="button" class="modal-close" onclick="closeDeleteModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete <strong id="itemNameToDelete"></strong>?</p>
+            <p class="warning-text">This action cannot be undone and will permanently remove the menu item.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cancel" onclick="closeDeleteModal()">
+                <i class="fas fa-times"></i>
+                Cancel
+            </button>
+            <button type="button" class="btn-delete" onclick="confirmDelete()">
+                <i class="fas fa-trash"></i>
+                Delete Item
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Html.AntiForgeryToken()
+    <script>
+        // Search and filter functionality
+        document.getElementById('menuSearch').addEventListener('input', filterItems);
+        document.getElementById('categoryFilter').addEventListener('change', filterItems);
+        document.getElementById('statusFilter').addEventListener('change', filterItems);
+
+        function filterItems() {
+            const searchTerm = document.getElementById('menuSearch').value.toLowerCase();
+            const categoryFilter = document.getElementById('categoryFilter').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+            const items = document.querySelectorAll('.menu-item-card');
+            const categorySections = document.querySelectorAll('.category-section');
+            let visibleCount = 0;
+
+            categorySections.forEach(section => {
+                const sectionItems = section.querySelectorAll('.menu-item-card');
+                let sectionVisibleCount = 0;
+                
+                sectionItems.forEach(item => {
+                    const name = item.dataset.name;
+                    const category = item.dataset.category;
+                    const status = item.dataset.status;
+
+                    const matchesSearch = name.includes(searchTerm);
+                    const matchesCategory = !categoryFilter || category === categoryFilter;
+                    const matchesStatus = !statusFilter || status === statusFilter;
+
+                    if (matchesSearch && matchesCategory && matchesStatus) {
+                        item.style.display = 'block';
+                        item.style.animation = 'fadeIn 0.3s ease';
+                        visibleCount++;
+                        sectionVisibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                
+                // Show/hide entire category section based on visible items
+                if (sectionVisibleCount > 0) {
+                    section.style.display = 'block';
+                } else {
+                    section.style.display = 'none';
+                }
+            });
+        }
+
+        function clearFilters() {
+            document.getElementById('menuSearch').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            filterItems();
+        }
+
+        function openAddItemModal() {
+            window.location.href = '@Url.Action("CreateMenuItem", "Admin")';
+        }
+
+        function openAddonModal() {
+            window.location.href = '@Url.Action("CreateAddon", "Admin")';
+        }
+
+        function editItem(itemId) {
+            window.location.href = '@Url.Action("EditMenuItem", "Admin")?id=' + itemId;
+        }
+
+        function manageAddons(itemId) {
+            window.location.href = '@Url.Action("MenuItemAddons", "Admin")?MenuItemId=' + itemId;
+        }
+
+        function toggleAvailability(itemId, isAvailable) {
+            fetch('@Url.Action("ToggleMenuItemAvailability", "Admin")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `id=${itemId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error updating availability: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating availability.');
+            });
+        }
+
+        let itemToDelete = null;
+        let itemNameToDelete = null;
+
+        function deleteItemFromButton(button) {
+            const itemId = button.getAttribute('data-item-id');
+            const itemName = button.getAttribute('data-item-name');
+            deleteItem(itemId, itemName);
+        }
+
+        function deleteItem(itemId, itemName) {
+            itemToDelete = itemId;
+            itemNameToDelete = itemName;
+            document.getElementById('itemNameToDelete').textContent = itemName;
+            document.getElementById('deleteModal').classList.add('show');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('show');
+            itemToDelete = null;
+            itemNameToDelete = null;
+        }
+
+        function confirmDelete() {
+            if (!itemToDelete) return;
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            
+            fetch('@Url.Action("DeleteMenuItem", "Admin")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `id=${itemToDelete}&__RequestVerificationToken=${encodeURIComponent(token)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeDeleteModal();
+                    // Show success message and reload page
+                    window.location.href = '@Url.Action("Menu", "Admin")?success=deleted';
+                } else {
+                    alert('Error deleting item: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the item.');
+            });
+        }
+
+        // Auto-hide floating success message after 3 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure modal starts hidden
+            const modal = document.getElementById('deleteModal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+            
+            const floatingMessage = document.getElementById('floatingSuccessMessage');
+            if (floatingMessage) {
+                setTimeout(function() {
+                    floatingMessage.style.animation = 'slideOutRight 0.3s ease-in';
+                    setTimeout(function() {
+                        floatingMessage.remove();
+                    }, 300);
+                }, 3000);
+            }
+        });
+    </script>
+    
+}

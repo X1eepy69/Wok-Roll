@@ -1,0 +1,186 @@
+@model List<Order>
+
+@{
+    ViewData["Title"] = "Order History";
+    var tableId = ViewBag.TableId;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/customer-styles.css" />
+}
+
+<div class="order-container">
+    <div class="order-background">
+        <div class="order-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </div>
+    
+    <div class="order-content">
+        <!-- Top Navigation Bar -->
+        <div class="top-nav-bar">
+            <!-- Left: Logo and Title -->
+            <div class="nav-left">
+                <div class="order-logo">
+                    <i class="fas fa-history"></i>
+                </div>
+                <div class="order-title">
+                    <h1>Order History</h1>
+                    <span class="table-info">Table @tableId</span>
+                </div>
+            </div>
+
+            <!-- Right: Action Buttons -->
+            <div class="nav-right">
+                <div class="action-buttons">
+                    <a asp-action="Table" asp-route-tableId="@tableId" class="action-btn secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back to Table</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Section -->
+        <div class="orders-section">
+            @if (Model != null && Model.Any())
+            {
+                <div class="section-header">
+                    <h2>
+                        <i class="fas fa-receipt"></i>
+                        Your Orders (@Model.Count)
+                    </h2>
+                </div>
+                
+                <div class="orders-container">
+                    @foreach (var order in Model)
+                    {
+                        <div class="order-card">
+                            <div class="order-header">
+                                <div class="order-info">
+                                    <div class="order-number">
+                                        <i class="fas fa-receipt"></i>
+                                        Order #@order.Id
+                                    </div>
+                                    <div class="order-date">
+                                        <i class="fas fa-calendar"></i>
+                                        @order.OrderDate.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                    </div>
+                                </div>
+                                <div class="order-status">
+                                    <span class="status-badge @(order.Status == "Completed" ? "completed" : order.Status == "Pending Payment" ? "pending-payment" : "pending")">
+                                        @order.Status
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="order-items">
+                                <div class="items-header">
+                                    <h4>
+                                        <i class="fas fa-utensils"></i>
+                                        Items Ordered
+                                    </h4>
+                                </div>
+                                <div class="items-list">
+                                    @foreach (var item in order.Items)
+                                    {
+                                        <div class="order-item">
+                                            <div class="item-info">
+                                                <div class="item-name">@item.MenuItem?.Name</div>
+                                                <div class="item-quantity">Qty: @item.Quantity</div>
+                                                @if (!string.IsNullOrEmpty(item.SpecialInstructions))
+                                                {
+                                                    if (item.SpecialInstructions.Contains("|||"))
+                                                    {
+                                                        var parts = item.SpecialInstructions.Split(new string[] { "|||" }, StringSplitOptions.None);
+                                                        var specialInstructions = parts[0].Trim();
+                                                        var addons = parts.Length > 1 ? parts[1].Trim() : "";
+                                                        
+                                                        @if (!string.IsNullOrEmpty(specialInstructions))
+                                                        {
+                                                            <div class="item-special">
+                                                                <span class="special-label">Special Request:</span>
+                                                                <span class="special-text">@specialInstructions</span>
+                                                            </div>
+                                                        }
+                                                        
+                                                        @if (!string.IsNullOrEmpty(addons))
+                                                        {
+                                                            <div class="item-addons">
+                                                                <span class="addons-label">Add-ons:</span>
+                                                                <div class="addons-list">
+                                                                    @foreach (var addon in addons.Split(','))
+                                                                    {
+                                                                        var trimmedAddon = addon.Trim();
+                                                                        if (!string.IsNullOrEmpty(trimmedAddon))
+                                                                        {
+                                                                            <span class="addon-badge">@trimmedAddon</span>
+                                                                        }
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="item-special">
+                                                            <span class="special-label">Special Request:</span>
+                                                            <span class="special-text">@item.SpecialInstructions</span>
+                                                        </div>
+                                                    }
+                                                }
+                                            </div>
+                                            <div class="item-price">
+                                                $@item.Subtotal.ToString("F2")
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="order-footer">
+                                <div class="order-total">
+                                    <span class="total-label">Total:</span>
+                                    <span class="total-amount">$@order.TotalAmount.ToString("F2")</span>
+                                </div>
+                                @if (order.Status == "Pending Payment")
+                                {
+                                    <div class="pending-notice">
+                                        <i class="fas fa-info-circle"></i>
+                                        <span>Please pay at the counter to complete your order.</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="section-header">
+                    <h2>
+                        <i class="fas fa-receipt"></i>
+                        Your Orders
+                    </h2>
+                </div>
+                
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <div class="empty-content">
+                        <h3>No Orders Yet</h3>
+                        <p>You haven't placed any orders for this table yet.</p>
+                        <a asp-action="Table" asp-route-tableId="@tableId" class="btn btn-primary">
+                            <i class="fas fa-utensils"></i>
+                            Start Ordering
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+

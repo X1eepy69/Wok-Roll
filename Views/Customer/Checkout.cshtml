@@ -1,0 +1,376 @@
+@model CheckoutViewModel
+@{
+    ViewData["Title"] = "Checkout - Table " + Model.TableId;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/customer-styles.css" />
+}
+
+<div class="order-container">
+    <div class="order-background">
+        <div class="order-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </div>
+    
+    <div class="order-content">
+        <!-- Top Navigation Bar -->
+        <div class="top-nav-bar">
+            <!-- Left: Logo and Title -->
+            <div class="nav-left">
+                <div class="order-logo">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <div class="order-title">
+                    <h1>Checkout</h1>
+                    <span class="table-info">Table @Model.TableId</span>
+                </div>
+            </div>
+
+            <!-- Right: Action Buttons -->
+            <div class="nav-right">
+                <div class="action-buttons">
+                    <a asp-action="Cart" asp-route-tableId="@Model.TableId" class="action-btn secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back to Cart</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checkout Content -->
+        <div class="checkout-content">
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="error-alert">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>@TempData["ErrorMessage"]</span>
+                </div>
+            }
+
+            <div class="checkout-grid">
+                <!-- Payment Section -->
+                <div class="payment-section">
+                    <div class="section-card">
+                        <div class="section-header">
+                            <h3>
+                                <i class="fas fa-credit-card"></i>
+                                Payment Information
+                            </h3>
+                        </div>
+                        <div class="section-content">
+                            <form asp-action="ProcessPayment" method="post">
+                                <input type="hidden" asp-for="TableId" />
+                                <input type="hidden" asp-for="Subtotal" />
+                                <input type="hidden" asp-for="Tax" />
+                                <input type="hidden" asp-for="Total" />
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Payment Method</label>
+                                    <div class="payment-methods">
+                                        <div class="payment-option">
+                                            <input type="radio" name="PaymentMethod" value="Pay at Counter" id="payAtCounter" checked>
+                                            <label for="payAtCounter">
+                                                <i class="fas fa-money-bill-wave"></i>
+                                                <span>Pay at Counter</span>
+                                            </label>
+                                        </div>
+                                        <div class="payment-option">
+                                            <input type="radio" name="PaymentMethod" value="Credit Card" id="credit">
+                                            <label for="credit">
+                                                <i class="fas fa-credit-card"></i>
+                                                <span>Credit Card</span>
+                                            </label>
+                                        </div>
+                                        <div class="payment-option">
+                                            <input type="radio" name="PaymentMethod" value="Debit Card" id="debit">
+                                            <label for="debit">
+                                                <i class="fas fa-credit-card"></i>
+                                                <span>Debit Card</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="cardDetails" class="card-details" style="display: none;">
+                                    <div class="form-group">
+                                        <label class="form-label">Cardholder Name</label>
+                                        <input asp-for="CardholderName" class="form-control" placeholder="Enter cardholder name" />
+                                        <span asp-validation-for="CardholderName" class="error-text"></span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Card Number</label>
+                                        <input asp-for="CardNumber" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19" />
+                                        <span asp-validation-for="CardNumber" class="error-text"></span>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="form-label">Expiry Date</label>
+                                            <input asp-for="ExpiryDate" class="form-control" placeholder="MM/YY" maxlength="5" />
+                                            <span asp-validation-for="ExpiryDate" class="error-text"></span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">CVV</label>
+                                            <input asp-for="CVV" class="form-control" placeholder="123" maxlength="3" />
+                                            <span asp-validation-for="CVV" class="error-text"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="checkout-btn">
+                                        <i class="fas fa-check"></i>
+                                        <span>Complete Order</span>
+                                    </button>
+                                    <a asp-action="Cart" asp-route-tableId="@Model.TableId" class="cancel-btn">
+                                        <i class="fas fa-times"></i>
+                                        <span>Cancel</span>
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Order Summary Section -->
+                <div class="order-summary-section">
+                    <div class="summary-card">
+                        <div class="summary-header">
+                            <h3>
+                                <i class="fas fa-receipt"></i>
+                                Order Summary
+                            </h3>
+                        </div>
+                        <div class="summary-content">
+                            <div class="order-items-section">
+                                <h4>Order Items:</h4>
+                                <div class="items-list">
+                                    @foreach (var item in Model.CartItems)
+                                    {
+                                        <div class="item-row">
+                                            <div class="item-details">
+                                                <span class="item-name">@item.MenuItem.Name</span>
+                                                @if (!string.IsNullOrEmpty(item.SpecialInstructions))
+                                                {
+                                                    <span class="item-special">@item.SpecialInstructions</span>
+                                                }
+                                                <span class="item-quantity">Qty: @item.Quantity</span>
+                                            </div>
+                                            <span class="item-price">$@((item.MenuItem.Price * item.Quantity).ToString("0.00"))</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            
+                            <div class="summary-divider"></div>
+                            
+                            <div class="summary-row">
+                                <span class="summary-label">Subtotal:</span>
+                                <span class="summary-value">$@Model.Subtotal.ToString("0.00")</span>
+                            </div>
+                            
+                            <div class="summary-row">
+                                <span class="summary-label">Tax (6%):</span>
+                                <span class="summary-value">$@Model.Tax.ToString("0.00")</span>
+                            </div>
+                            
+                            <div class="summary-divider"></div>
+                            
+                            <div class="summary-row total-row">
+                                <span class="summary-label">Total:</span>
+                                <span class="summary-value">$@Model.Total.ToString("0.00")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Show/hide card details based on payment method
+        document.querySelectorAll('input[name="PaymentMethod"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const cardDetails = document.getElementById('cardDetails');
+                if (this.value === 'Credit Card' || this.value === 'Debit Card') {
+                    cardDetails.style.display = 'block';
+                } else {
+                    cardDetails.style.display = 'none';
+                }
+            });
+        });
+
+        // Format card number
+        document.querySelector('input[name="CardNumber"]')?.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            e.target.value = formattedValue;
+        });
+
+        // Enhanced expiry date formatting with real-time validation
+        document.querySelector('input[name="ExpiryDate"]')?.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            // Handle backspace - allow clearing both MM and YY
+            if (e.inputType === 'deleteContentBackward') {
+                // If we have MM/YY format and user presses backspace, remove the slash first
+                if (value.length === 2 && e.target.value.includes('/')) {
+                    value = value.substring(0, 1);
+                }
+            }
+            
+            // Format with slash
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            e.target.value = value;
+            
+            // Real-time validation
+            validateExpiryDate(e.target);
+        });
+
+        // Real-time expiry date validation function
+        function validateExpiryDate(input) {
+            const value = input.value;
+            let errorMessage = '';
+            
+            if (value && value.length === 5) {
+                const parts = value.split('/');
+                const month = parseInt(parts[0]);
+                const year = parseInt('20' + parts[1]);
+                const currentDate = new Date();
+                const currentYear = currentDate.getFullYear();
+                const currentMonth = currentDate.getMonth() + 1;
+                
+                // Check month validity
+                if (month > 12) {
+                    errorMessage = 'Invalid month. Month must be between 01-12.';
+                }
+                // Check year validity
+                else if (year < currentYear) {
+                    errorMessage = 'Card has expired. Please enter a valid expiry date.';
+                }
+                // Check if card expires this month
+                else if (year === currentYear && month < currentMonth) {
+                    errorMessage = 'Card has expired. Please enter a valid expiry date.';
+                }
+            }
+            
+            // Set custom validity and show error
+            input.setCustomValidity(errorMessage);
+            
+            // Show/hide error message
+            const errorSpan = input.parentNode.querySelector('.error-text');
+            if (errorSpan) {
+                if (errorMessage) {
+                    errorSpan.textContent = errorMessage;
+                    errorSpan.style.display = 'block';
+                    input.style.borderColor = '#dc3545';
+                } else {
+                    errorSpan.style.display = 'none';
+                    input.style.borderColor = '';
+                }
+            }
+        }
+
+        // Format CVV - only allow 3 digits
+        document.querySelector('input[name="CVV"]')?.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            e.target.value = value.substring(0, 3);
+        });
+
+        // Form submission handling - ensure card details stay visible on validation errors
+        document.querySelector('form')?.addEventListener('submit', function(e) {
+            const paymentMethod = document.querySelector('input[name="PaymentMethod"]:checked')?.value;
+            
+            // If credit/debit card is selected, ensure card details are visible
+            if (paymentMethod === 'Credit Card' || paymentMethod === 'Debit Card') {
+                const cardDetails = document.getElementById('cardDetails');
+                if (cardDetails) {
+                    cardDetails.style.display = 'block';
+                }
+            }
+        });
+
+        // Enhanced form validation before submission
+        document.querySelector('form')?.addEventListener('submit', function(e) {
+            const paymentMethod = document.querySelector('input[name="PaymentMethod"]:checked')?.value;
+            
+            if (paymentMethod === 'Credit Card' || paymentMethod === 'Debit Card') {
+                // Validate all card fields
+                const cardholderName = document.querySelector('input[name="CardholderName"]');
+                const cardNumber = document.querySelector('input[name="CardNumber"]');
+                const expiryDate = document.querySelector('input[name="ExpiryDate"]');
+                const cvv = document.querySelector('input[name="CVV"]');
+                
+                let hasErrors = false;
+                
+                // Check cardholder name
+                if (!cardholderName.value.trim()) {
+                    showFieldError(cardholderName, 'Cardholder name is required for card payments');
+                    hasErrors = true;
+                }
+                
+                // Check card number
+                if (!cardNumber.value.trim()) {
+                    showFieldError(cardNumber, 'Card number is required for card payments');
+                    hasErrors = true;
+                } else if (!/^\d{4}\s\d{4}\s\d{4}\s\d{4}$/.test(cardNumber.value)) {
+                    showFieldError(cardNumber, 'Please enter a valid 16-digit card number');
+                    hasErrors = true;
+                }
+                
+                // Check expiry date
+                if (!expiryDate.value.trim()) {
+                    showFieldError(expiryDate, 'Expiry date is required for card payments');
+                    hasErrors = true;
+                } else {
+                    validateExpiryDate(expiryDate);
+                    if (expiryDate.validity.customError) {
+                        hasErrors = true;
+                    }
+                }
+                
+                // Check CVV
+                if (!cvv.value.trim()) {
+                    showFieldError(cvv, 'CVV is required for card payments');
+                    hasErrors = true;
+                } else if (!/^\d{3}$/.test(cvv.value)) {
+                    showFieldError(cvv, 'CVV must be exactly 3 digits');
+                    hasErrors = true;
+                }
+                
+                if (hasErrors) {
+                    e.preventDefault(); // Prevent form submission
+                    return false;
+                }
+            }
+        });
+
+        // Helper function to show field errors
+        function showFieldError(input, message) {
+            const errorSpan = input.parentNode.querySelector('.error-text');
+            if (errorSpan) {
+                errorSpan.textContent = message;
+                errorSpan.style.display = 'block';
+                input.style.borderColor = '#dc3545';
+            }
+        }
+
+        // Auto-dismiss alerts
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 5000);
+    </script>
+}

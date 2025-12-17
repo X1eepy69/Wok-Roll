@@ -1,0 +1,192 @@
+@model User
+@{
+    ViewData["Title"] = "User Details - " + Model.Name;
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-styles.css" />
+}
+
+<!-- Top Bar -->
+<header class="top-bar">
+    <div class="top-bar-left">
+        <div class="breadcrumb">
+            <a asp-action="Index">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <a asp-action="Users">User Management</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>User Details</span>
+        </div>
+        <h1>User Details</h1>
+        <p>@Model.Name - View user information and order history</p>
+    </div>
+    <div class="top-bar-right">
+        <div class="quick-actions">
+            <a asp-action="EditUser" asp-route-id="@Model.Id" class="btn-primary">
+                <i class="fas fa-edit"></i>
+                Edit User
+            </a>
+            <a asp-action="Users" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Users
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- Alerts -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Content Grid -->
+<section class="content-grid">
+    <!-- User Information -->
+    <div class="content-card sidebar-content">
+        <div class="card-header">
+            <h3>
+                <i class="fas fa-user-circle"></i>
+                User Information
+            </h3>
+        </div>
+        <div class="card-content">
+            <div class="user-avatar-section">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h4>@Model.Name</h4>
+                <p class="user-email">@Model.Email</p>
+            </div>
+            
+            <div class="user-details">
+                <div class="detail-item">
+                    <label>User ID</label>
+                    <span>#@Model.Id</span>
+                </div>
+                <div class="detail-item">
+                    <label>Role</label>
+                    <span class="role-badge @(Model.Role == "Admin" ? "admin" : "customer")">
+                        @Model.Role
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <label>Status</label>
+                    <span class="status-badge @(Model.IsActive ? "active" : "inactive")">
+                        @(Model.IsActive ? "Active" : "Inactive")
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <label>Member Since</label>
+                    <span>@Model.CreatedAt.ToString("MMM dd, yyyy")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Order History -->
+    <div class="content-card">
+        <div class="card-header">
+            <h3>
+                <i class="fas fa-shopping-bag"></i>
+                Order History (@(Model.Orders?.Count ?? 0))
+            </h3>
+        </div>
+        <div class="card-content">
+            @if (Model.Orders != null && Model.Orders.Any())
+            {
+                <div class="table-responsive">
+                    <table class="user-orders-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Date & Time</th>
+                                <th>Table</th>
+                                <th>Items</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model.Orders.OrderByDescending(o => o.OrderDate))
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="order-id">
+                                            <strong>#@order.Id</strong>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="order-date">
+                                            <div class="date">@order.OrderDate.ToString("MMM dd, yyyy")</div>
+                                            <div class="time">@order.OrderDate.ToString("h:mm tt")</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (order.Table != null)
+                                        {
+                                            <span class="table-badge">Table @order.Table.Id</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="no-table">N/A</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="items-count">@order.Items.Count items</span>
+                                    </td>
+                                    <td>
+                                        <span class="order-total">$@order.TotalAmount.ToString("F2")</span>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge @order.Status.ToLower().Replace(" ", "-")">
+                                            @order.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <h3>No orders found</h3>
+                    <p>This user hasn't placed any orders yet.</p>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Auto-dismiss alerts
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+    
+}

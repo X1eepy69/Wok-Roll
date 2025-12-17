@@ -1,0 +1,319 @@
+@model Order
+@{
+    ViewData["Title"] = $"Print Order #{Model.Id}";
+    Layout = null; // No layout for print
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Receipt - #@Model.Id</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            line-height: 1.4;
+            color: #333;
+            background: white;
+        }
+
+        .receipt-container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+        }
+
+        .restaurant-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .restaurant-tagline {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .order-info {
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .info-value {
+            color: #333;
+        }
+
+        .order-items {
+            margin-bottom: 20px;
+        }
+
+        .items-header {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 15px;
+            text-align: center;
+            border-top: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px dotted #ddd;
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .item-quantity {
+            font-size: 12px;
+            color: #666;
+            margin-left: 10px;
+        }
+
+        .item-special {
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+            margin-top: 2px;
+        }
+
+        .item-price {
+            font-weight: 600;
+            color: #333;
+            text-align: right;
+        }
+
+        .totals {
+            border-top: 2px solid #333;
+            padding-top: 15px;
+            margin-top: 20px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .total-label {
+            font-weight: 600;
+        }
+
+        .total-amount {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .grand-total {
+            border-top: 1px solid #333;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+
+        .grand-total .total-label {
+            font-size: 16px;
+        }
+
+        .grand-total .total-amount {
+            font-size: 18px;
+            color: #e74c3c;
+        }
+
+        .receipt-footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .payment-info {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+
+        .payment-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .payment-method {
+            font-weight: 600;
+        }
+
+        .payment-amount {
+            color: #27ae60;
+            font-weight: 600;
+        }
+
+        .print-only {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-container">
+        <div class="receipt-header">
+            <div class="restaurant-name">🍽️ DineIn System</div>
+            <div class="restaurant-tagline">Professional Dining Experience</div>
+            <div style="font-size: 16px; font-weight: bold; margin-top: 10px;">ORDER RECEIPT</div>
+        </div>
+
+        <div class="order-info">
+            <div class="info-row">
+                <span class="info-label">Order #:</span>
+                <span class="info-value">@Model.Id</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Date:</span>
+                <span class="info-value">@Model.OrderDate.ToString("MMM dd, yyyy")</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Time:</span>
+                <span class="info-value">@Model.OrderDate.ToString("h:mm tt")</span>
+            </div>
+            @if (Model.Table != null)
+            {
+                <div class="info-row">
+                    <span class="info-label">Table:</span>
+                    <span class="info-value">@Model.Table.Id</span>
+                </div>
+            }
+            @if (Model.User != null)
+            {
+                <div class="info-row">
+                    <span class="info-label">Customer:</span>
+                    <span class="info-value">@Model.User.Name</span>
+                </div>
+            }
+            <div class="info-row">
+                <span class="info-label">Status:</span>
+                <span class="info-value">@Model.Status</span>
+            </div>
+        </div>
+
+        <div class="order-items">
+            <div class="items-header">ITEMS ORDERED</div>
+            
+            @if (Model.Items != null && Model.Items.Any())
+            {
+                @foreach (var item in Model.Items)
+                {
+                    <div class="item-row">
+                        <div class="item-details">
+                            <div class="item-name">
+                                @item.MenuItem?.Name
+                                <span class="item-quantity">@($"x{item.Quantity}")</span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(item.SpecialInstructions))
+                            {
+                                <div class="item-special">Note: @item.SpecialInstructions</div>
+                            }
+                        </div>
+                        <div class="item-price">$@item.Subtotal.ToString("F2")</div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="item-row">
+                    <div class="item-details">No items in this order</div>
+                </div>
+            }
+        </div>
+
+        <div class="totals">
+            <div class="total-row">
+                <span class="total-label">Subtotal:</span>
+                <span class="total-amount">$@(Model.Items?.Sum(i => i.Subtotal).ToString("F2") ?? "0.00")</span>
+            </div>
+            <div class="total-row">
+                <span class="total-label">Tax (6%):</span>
+                <span class="total-amount">$@(((Model.Items?.Sum(i => i.Subtotal) ?? 0m) * 0.06m).ToString("F2"))</span>
+            </div>
+            <div class="total-row grand-total">
+                <span class="total-label">TOTAL:</span>
+                <span class="total-amount">$@Model.TotalAmount.ToString("F2")</span>
+            </div>
+        </div>
+
+        @if (Model.Payments != null && Model.Payments.Any())
+        {
+            <div class="payment-info">
+                <div style="font-weight: bold; margin-bottom: 10px; text-align: center;">PAYMENT DETAILS</div>
+                @foreach (var payment in Model.Payments)
+                {
+                    <div class="payment-item">
+                        <span class="payment-method">@payment.Method</span>
+                        <span class="payment-amount">$@payment.Amount.ToString("F2")</span>
+                    </div>
+                }
+                <div class="payment-item" style="border-top: 1px solid #ddd; padding-top: 5px; margin-top: 10px;">
+                    <span class="payment-method">Total Paid:</span>
+                    <span class="payment-amount">$@Model.Payments.Sum(p => p.Amount).ToString("F2")</span>
+                </div>
+            </div>
+        }
+
+        <div class="receipt-footer">
+            <div>Thank you for dining with us!</div>
+            <div style="margin-top: 10px;">Printed on @DateTime.Now.ToString("MMM dd, yyyy") at @DateTime.Now.ToString("h:mm tt")</div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-print when page loads
+        window.onload = function() {
+            window.print();
+        };
+
+        // Close window after printing
+        window.onafterprint = function() {
+            window.close();
+        };
+    </script>
+</body>
+</html>

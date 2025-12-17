@@ -1,0 +1,296 @@
+@model List<Order>
+@{
+    ViewData["Title"] = "Transactions";
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-styles.css" />
+}
+
+<!-- Top Bar -->
+<header class="top-bar">
+    <div class="top-bar-left">
+        <div class="breadcrumb">
+            <a asp-action="Index">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Transactions</span>
+        </div>
+        <h1>Transactions</h1>
+        <p>View all restaurant transactions and orders</p>
+    </div>
+</header>
+
+<!-- Floating Success Message -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="floatingSuccessMessage" class="floating-success-message">
+        <i class="fas fa-check-circle"></i>
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<!-- Floating Error Message -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div id="floatingErrorMessage" class="floating-error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<!-- Transaction Stats -->
+<section class="transaction-stats-section">
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-icon">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <div class="stat-content">
+                <h2>@Model.Count</h2>
+                <p>Total Orders</p>
+            </div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+                <h2>@Model.Count(o => o.Status == "Completed")</h2>
+                <p>Completed</p>
+            </div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-content">
+                <h2>@Model.Count(o => o.Status == "Pending")</h2>
+                <p>Pending</p>
+            </div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-icon">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-content">
+                <h2>$@Model.Sum(o => o.TotalAmount).ToString("F2")</h2>
+                <p>Total Revenue</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Filters Section -->
+<section class="transaction-filters-section">
+    <div class="content-card">
+        <div class="card-header">
+            <h3>
+                <i class="fas fa-filter"></i>
+                Filter & Search
+            </h3>
+        </div>
+        <div class="card-content">
+            <div class="filters-container">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search by order ID, table, or customer..." />
+                </div>
+                <div class="filter-controls">
+                    <select id="statusFilter" class="filter-select">
+                        <option value="">All Status</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                    <input type="date" id="dateFilter" class="filter-select" />
+                    <button class="clear-filters" onclick="clearFilters()">
+                        <i class="fas fa-times"></i>
+                        Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Transactions Table -->
+<section class="transactions-content">
+    <div class="content-card">
+        <div class="card-header">
+            <h3>
+                <i class="fas fa-receipt"></i>
+                All Transactions (@Model.Count orders)
+            </h3>
+        </div>
+        <div class="card-content">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="transactions-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Date & Time</th>
+                                <th>Table</th>
+                                <th>Customer</th>
+                                <th>Items</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model)
+                            {
+                                <tr class="transaction-row">
+                                    <td>
+                                        <strong>#@order.Id</strong>
+                                    </td>
+                                    <td>
+                                        <div class="date-info">
+                                            <div>@order.OrderDate.ToString("MMM dd, yyyy")</div>
+                                            <small>@order.OrderDate.ToString("h:mm tt")</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (order.Table != null)
+                                        {
+                                            <span class="table-badge">Table @order.Table.Id</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (order.User != null)
+                                        {
+                                            <div class="customer-info">
+                                                <div>@order.User.Name</div>
+                                                <small>@order.User.Email</small>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Guest</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="items-badge">@order.Items.Count items</span>
+                                    </td>
+                                    <td>
+                                        <strong class="amount">$@order.TotalAmount.ToString("F2")</strong>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge @order.Status.ToLower()">
+                                            @order.Status
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (order.Payments.Any())
+                                        {
+                                            var payment = order.Payments.First();
+                                            <div class="payment-info">
+                                                <div>@payment.Method</div>
+                                                <small>@payment.PaymentDate.ToString("MMM dd")</small>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No payment</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-btn view" onclick="viewOrderDetails(@order.Id)" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="action-btn print" onclick="printOrder(@order.Id)" title="Print">
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <h3>No transactions found</h3>
+                    <p>There are no orders in the system yet.</p>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function() {
+            filterTransactions();
+        });
+
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            filterTransactions();
+        });
+
+        document.getElementById('dateFilter').addEventListener('change', function() {
+            filterTransactions();
+        });
+
+        function filterTransactions() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            const rows = document.querySelectorAll('.transaction-row');
+
+            rows.forEach(row => {
+                const orderId = row.cells[0].textContent.toLowerCase();
+                const table = row.cells[2].textContent.toLowerCase();
+                const customer = row.cells[3].textContent.toLowerCase();
+                const status = row.cells[6].textContent.toLowerCase();
+                const date = row.cells[1].textContent.toLowerCase();
+
+                const matchesSearch = orderId.includes(searchTerm) || 
+                                    table.includes(searchTerm) || 
+                                    customer.includes(searchTerm);
+                
+                const matchesStatus = !statusFilter || status.includes(statusFilter.toLowerCase());
+                const matchesDate = !dateFilter || date.includes(dateFilter);
+
+                if (matchesSearch && matchesStatus && matchesDate) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('dateFilter').value = '';
+            filterTransactions();
+        }
+
+        function viewOrderDetails(orderId) {
+            // Open order details modal or redirect
+            window.open('@Url.Action("OrderDetails", "Admin")?orderId=' + orderId, '_blank');
+        }
+
+        function printOrder(orderId) {
+            // Open print dialog for order
+            window.open('@Url.Action("PrintOrder", "Admin")?orderId=' + orderId, '_blank');
+        }
+    </script>
+    
+}

@@ -1,0 +1,279 @@
+@model List<CategoryViewModel>
+@{
+    ViewData["Title"] = "Category Management";
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-styles.css" />
+}
+
+<!-- Top Bar -->
+<header class="top-bar">
+    <div class="top-bar-left">
+        <div class="breadcrumb">
+            <a asp-action="Index">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Category Management</span>
+        </div>
+        <h1>Category Management</h1>
+        <p>Manage menu categories and their ID prefixes</p>
+    </div>
+    <div class="top-bar-right">
+        <div class="quick-actions">
+            <a asp-action="CreateCategory" class="btn-primary">
+                <i class="fas fa-plus"></i>
+                Add New Category
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- Floating Success Message -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="floatingSuccessMessage" class="floating-success-message">
+        <i class="fas fa-check-circle"></i>
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<!-- Floating Error Message -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div id="floatingErrorMessage" class="floating-error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<!-- Categories Content -->
+<section class="categories-content">
+    <div class="categories-grid">
+        @foreach (var category in Model)
+        {
+            <div class="category-card @(category.IsActive ? "active" : "inactive")">
+                <div class="category-header">
+                    <div class="category-info">
+                        <h3 class="category-name">@category.Name</h3>
+                        <div class="category-prefix">
+                            <span class="prefix-label">Prefix:</span>
+                            <span class="prefix-value">@category.Prefix</span>
+                        </div>
+                    </div>
+                    <div class="category-status">
+                        <span class="status-badge @(category.IsActive ? "active" : "inactive")">
+                            @(category.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </div>
+                </div>
+
+                <div class="category-details">
+                    @if (!string.IsNullOrEmpty(category.Description))
+                    {
+                        <p class="category-description">@category.Description</p>
+                    }
+                    
+                    <div class="category-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-utensils"></i>
+                            <span>@category.MenuItemCount items</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-sort-numeric-up"></i>
+                            <span>Order: @category.DisplayOrder</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>Created: @category.CreatedAt.ToString("MMM dd, yyyy")</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="category-actions">
+                    <a asp-action="EditCategory" asp-route-id="@category.Id" class="action-btn edit" title="Edit Category">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <button class="action-btn @(category.IsActive ? "deactivate" : "activate")" 
+                            onclick="toggleCategoryStatus(@category.Id)" 
+                            title="@(category.IsActive ? "Deactivate" : "Activate") Category">
+                        <i class="fas @(category.IsActive ? "fa-eye" : "fa-eye-slash")"></i>
+                    </button>
+                    @if (category.MenuItemCount == 0)
+                    {
+                        <button class="action-btn delete" onclick="deleteCategory(@category.Id, '@category.Name')" title="Delete Category">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    }
+                    else
+                    {
+                        <span class="action-btn disabled" title="Cannot delete category with menu items">
+                            <i class="fas fa-trash"></i>
+                        </span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-tags"></i>
+            </div>
+            <h3>No categories found</h3>
+            <p>Start by adding your first category to organize your menu items</p>
+            <a asp-action="CreateCategory" class="btn-primary">
+                <i class="fas fa-plus"></i>
+                Add First Category
+            </a>
+        </div>
+    }
+</section>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Confirm Delete</h3>
+            <button class="close-btn" onclick="closeDeleteModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete the category "<span id="categoryName"></span>"?</p>
+            <p class="warning-text">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+            <button class="btn-danger" id="confirmDeleteBtn">Delete</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Html.AntiForgeryToken()
+    <script>
+        // Auto-hide floating messages
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Categories page JavaScript loaded');
+            
+            // Ensure modal is hidden on page load
+            const modal = document.getElementById('deleteModal');
+            if (modal) {
+                modal.classList.remove('show');
+                console.log('Modal initialized as hidden');
+            }
+            
+            const floatingMessage = document.getElementById('floatingSuccessMessage');
+            const floatingError = document.getElementById('floatingErrorMessage');
+            
+            if (floatingMessage) {
+                setTimeout(function() {
+                    floatingMessage.style.animation = 'slideOutRight 0.3s ease-in';
+                    setTimeout(function() {
+                        floatingMessage.remove();
+                    }, 300);
+                }, 3000);
+            }
+            
+            if (floatingError) {
+                setTimeout(function() {
+                    floatingError.style.animation = 'slideOutRight 0.3s ease-in';
+                    setTimeout(function() {
+                        floatingError.remove();
+                    }, 300);
+                }, 5000);
+            }
+        });
+
+        // Toggle category status
+        function toggleCategoryStatus(categoryId) {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            fetch('@Url.Action("ToggleCategoryStatus", "Admin")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `id=${categoryId}&__RequestVerificationToken=${encodeURIComponent(token)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating category status.');
+            });
+        }
+
+        // Delete category
+        let categoryToDelete = null;
+
+        function deleteCategory(categoryId, categoryName) {
+            categoryToDelete = categoryId;
+            
+            const categoryNameElement = document.getElementById('categoryName');
+            const deleteModal = document.getElementById('deleteModal');
+            
+            if (categoryNameElement && deleteModal) {
+                categoryNameElement.textContent = categoryName;
+                deleteModal.classList.add('show');
+            } else {
+                console.error('Modal elements not found!');
+            }
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteModal');
+            modal.classList.remove('show');
+            categoryToDelete = null;
+        }
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+            if (categoryToDelete) {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+                console.log('Deleting category:', categoryToDelete);
+                console.log('Token found:', !!token);
+                
+                fetch('@Url.Action("DeleteCategory", "Admin")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `id=${categoryToDelete}&__RequestVerificationToken=${encodeURIComponent(token)}`
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Response data:', data);
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                        closeDeleteModal();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while deleting the category.');
+                    closeDeleteModal();
+                });
+            }
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('deleteModal');
+            if (event.target === modal) {
+                closeDeleteModal();
+            }
+        });
+    </script>
+    
+}

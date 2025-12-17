@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Wok & Roll</title>
+    <link rel="icon" type="image/png" href="~/Images/icon.png" />
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Restaurant Dining System CSS -->
+    <link rel="stylesheet" href="~/css/restaurant-dining.css" asp-append-version="true" />
+    
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <img src="~/Images/logo.png" alt="Wok & Roll Logo" style="height: 40px;" />
+                    Wok & Roll
+                </a>
+                
+                <div class="navbar-nav">
+                    <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
+                        <i class="fas fa-home"></i>Home
+                    </a>
+                    
+                    @if (Context.Session.GetString("UserRole") == "Admin")
+                    {
+                        <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="Index">
+                            <i class="fas fa-tachometer-alt"></i>Admin
+                        </a>
+                    }
+                    
+                    @if (Context.Session.GetString("UserId") != null && Context.Session.GetString("UserRole") != "Admin")
+                    {
+                        <a class="nav-link" asp-area="" asp-controller="Customer" asp-action="History">
+                            <i class="fas fa-history"></i>Order History
+                        </a>
+                    }
+                    
+                    @* Show table order history when customer is at a table *@
+                    @if (ViewBag.TableId != null)
+                    {
+                        <a class="nav-link" asp-area="" asp-controller="Customer" asp-action="OrderHistory" asp-route-tableId="@ViewBag.TableId">
+                            <i class="fas fa-receipt"></i>Table Orders
+                        </a>
+                    }
+                    
+                    @if (Context.Session.GetString("UserId") != null)
+                    {
+                        <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Profile">
+                            <i class="fas fa-user"></i>Profile
+                        </a>
+                        <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Logout">
+                            <i class="fas fa-sign-out-alt"></i>Logout
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Login">
+                            <i class="fas fa-sign-in-alt"></i>Login
+                        </a>
+                    }
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        @RenderBody()
+    </main>
+
+    <footer class="footer">
+        <div class="container text-center">
+            <p class="footer-text">
+                &copy; 2024 Wok & Roll - Premium Restaurant Management System
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

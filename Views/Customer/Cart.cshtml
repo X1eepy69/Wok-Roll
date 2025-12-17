@@ -1,0 +1,676 @@
+@model CartViewModel
+@{
+    ViewData["Title"] = "Shopping Cart - Table " + Model.TableId;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/customer-styles.css" />
+}
+
+<div class="order-container">
+    <div class="order-background">
+        <div class="order-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </div>
+    
+    <div class="order-content">
+        <!-- Top Navigation Bar -->
+        <div class="top-nav-bar">
+            <!-- Left: Logo and Title -->
+            <div class="nav-left">
+                <div class="order-logo">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="order-title">
+                    <h1>Shopping Cart</h1>
+                </div>
+            </div>
+
+            <!-- Right: Action Buttons -->
+            <div class="nav-right">
+                <div class="action-buttons">
+                    <a asp-action="AddOrder" asp-route-tableId="@Model.TableId" class="action-btn primary">
+                    <i class="fas fa-plus"></i>
+                        <span>Add More Items</span>
+                </a>
+                    <a asp-action="AddOrder" asp-route-tableId="@Model.TableId" class="action-btn secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back to Table</span>
+                    </a>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Items.Any())
+    {
+            <!-- Cart Items Section -->
+            <div class="cart-items-section">
+                <div class="section-header">
+                    <h2>
+                        <i class="fas fa-shopping-cart"></i>
+                            Your Order Items (@Model.Items.Sum(i => i.Quantity) items)
+                    </h2>
+                    </div>
+                
+                <div class="cart-items-grid">
+                        @foreach (var item in Model.Items)
+                        {
+                        <div class="cart-item-card">
+                            <div class="item-image">
+                                            @if (!string.IsNullOrEmpty(item.MenuItem.ImagePath))
+                                            {
+                                    <img src="@item.MenuItem.ImagePath" alt="@item.MenuItem.Name">
+                                            }
+                                            else
+                                            {
+                                    <div class="no-image">
+                                                    <i class="fas fa-image"></i>
+                                                </div>
+                                            }
+                                        </div>
+                            
+                            <div class="item-details">
+                                <div class="item-header">
+                                    <h3 class="item-title">@item.MenuItem.Name</h3>
+                                    <span class="item-category">@item.MenuItem.Category</span>
+                                    </div>
+                                        
+                                        <!-- Special Instructions and Addons -->
+                                        @if (!string.IsNullOrEmpty(item.SpecialInstructions))
+                                        {
+                                            if (item.SpecialInstructions.Contains("|||"))
+                                            {
+                                                var parts = item.SpecialInstructions.Split(new string[] { "|||" }, StringSplitOptions.None);
+                                                var specialInstructions = parts[0].Trim();
+                                                var addons = parts.Length > 1 ? parts[1].Trim() : "";
+                                                
+                                                @if (!string.IsNullOrEmpty(specialInstructions))
+                                                {
+                                                    <div class="item-special">
+                                                        <span class="special-label">Special Request:</span>
+                                                        <span class="special-text">@specialInstructions</span>
+                                                    </div>
+                                                }
+                                                
+                                                @if (!string.IsNullOrEmpty(addons))
+                                                {
+                                                    <div class="item-addons">
+                                                        <span class="addons-label">Add-ons:</span>
+                                                        <div class="addons-list">
+                                                            @foreach (var addon in addons.Split(','))
+                                                            {
+                                                                var trimmedAddon = addon.Trim();
+                                                                if (!string.IsNullOrEmpty(trimmedAddon))
+                                                                {
+                                                                    <span class="addon-badge">@trimmedAddon</span>
+                                                                }
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                // Check if it's just addons without special instructions
+                                                if (item.SpecialInstructions.StartsWith("|||"))
+                                                {
+                                                    var addonsOnly = item.SpecialInstructions.Substring(3).Trim();
+                                                    if (!string.IsNullOrEmpty(addonsOnly))
+                                                    {
+                                                        <div class="item-addons">
+                                                            <span class="addons-label">Add-ons:</span>
+                                                            <div class="addons-list">
+                                                                @foreach (var addon in addonsOnly.Split(','))
+                                                                {
+                                                                    var trimmedAddon = addon.Trim();
+                                                                    if (!string.IsNullOrEmpty(trimmedAddon))
+                                                                    {
+                                                                        <span class="addon-badge">@trimmedAddon</span>
+                                                                    }
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <div class="item-special">
+                                                        <span class="special-label">Special Request:</span>
+                                                        <span class="special-text">@item.SpecialInstructions</span>
+                                                    </div>
+                                                }
+                                            }
+                                        }
+                                    </div>
+
+                            <div class="item-controls">
+                                <div class="quantity-section">
+                                    <span class="quantity-label">Quantity</span>
+                                        <div class="quantity-controls">
+                                        <button class="qty-btn" onclick="updateQuantity('@item.Id', @item.Quantity - 1)">
+                                                    <i class="fas fa-minus"></i>
+                                                </button>
+                                        <span class="qty-display">@item.Quantity</span>
+                                        <button class="qty-btn" onclick="updateQuantity('@item.Id', @item.Quantity + 1)">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                        </div>
+                                    </div>
+
+                                        <div class="price-section">
+                                            <div class="unit-price">$@item.UnitPrice.ToString("F2") each</div>
+                                            <div class="total-price">$@((item.UnitPrice * item.Quantity).ToString("F2"))</div>
+                                        </div>
+                                
+                                <div class="item-actions">
+                                    <button class="edit-btn" onclick="editItem('@item.Id')">
+                                        <i class="fas fa-edit"></i>
+                                        Edit
+                                    </button>
+                                    <button class="remove-btn" onclick="removeItem('@item.Id')">
+                                        <i class="fas fa-trash"></i>
+                                        Remove
+                                    </button>
+                                </div>
+                                </div>
+                            </div>
+                        }
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="order-summary-section">
+                <div class="summary-card">
+                    <div class="summary-header">
+                        <h3>
+                            <i class="fas fa-receipt"></i>
+                            Order Summary
+                        </h3>
+                    </div>
+                    <div class="summary-content">
+                        <div class="summary-row">
+                            <span class="summary-label">Subtotal:</span>
+                            <span class="summary-value">$@Model.Subtotal.ToString("F2")</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Tax (6%):</span>
+                            <span class="summary-value">$@Model.Tax.ToString("F2")</span>
+                        </div>
+                        <div class="summary-divider"></div>
+                        <div class="summary-row total-row">
+                            <span class="summary-label">Total:</span>
+                            <span class="summary-value">$@Model.Total.ToString("F2")</span>
+                        </div>
+                        
+                        <div class="summary-actions">
+                            <a asp-action="Checkout" asp-route-tableId="@Model.TableId" class="checkout-btn">
+                                <i class="fas fa-credit-card"></i>
+                                <span>Proceed to Checkout</span>
+                            </a>
+                            <button class="clear-btn" onclick="clearCart()">
+                                <i class="fas fa-trash"></i>
+                                <span>Clear Cart</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+        </div>
+    }
+    else
+    {
+        <!-- Empty Cart -->
+            <div class="empty-cart-section">
+                <div class="empty-cart-card">
+                    <div class="empty-cart-content">
+                        <div class="empty-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <h3>Your cart is empty</h3>
+                        <p>Start adding delicious items to your order!</p>
+                        <a asp-action="AddOrder" asp-route-tableId="@Model.TableId" class="browse-btn">
+                        <i class="fas fa-plus"></i>
+                            <span>Browse Menu</span>
+                    </a>
+                    </div>
+                </div>
+            </div>
+        }
+        </div>
+</div>
+
+<!-- Edit Item Modal -->
+<div id="editItemModal" class="modal-overlay">
+    <div class="modal-backdrop"></div>
+    <div class="modal-container">
+        <div class="modal-card">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <div class="modal-header-content">
+                    <div class="modal-icon">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <div class="modal-title-section">
+                        <h2 class="modal-title" id="editItemName">Edit Item</h2>
+                        <p class="modal-subtitle" id="editItemCategory">Customize your order</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeEditModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <input type="hidden" id="editCartItemId" />
+                
+                <!-- Quantity Section -->
+                <div class="form-section">
+                    <label class="section-label">
+                        <i class="fas fa-hashtag"></i>
+                        Quantity
+                    </label>
+                    <div class="quantity-controls">
+                        <button type="button" class="qty-btn" onclick="decreaseEditQuantity()">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <input type="number" id="editQuantity" class="qty-input" value="1" min="1" max="10">
+                        <button type="button" class="qty-btn" onclick="increaseEditQuantity()">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Special Instructions Section -->
+                <div class="form-section">
+                    <label class="section-label">
+                        <i class="fas fa-edit"></i>
+                        Special Instructions
+                    </label>
+                    <textarea id="editSpecialInstructions" class="text-input" rows="3" placeholder="Any special requests or modifications..."></textarea>
+                </div>
+
+                <!-- Add-ons Section -->
+                <div class="form-section">
+                    <label class="section-label">
+                        <i class="fas fa-plus-circle"></i>
+                        Add-ons
+                    </label>
+                    <div id="editAddonsList" class="addons-list">
+                        <div class="no-addons">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Loading addons...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Price -->
+                <div class="total-section">
+                    <div class="total-card">
+                        <div class="total-header">
+                            <i class="fas fa-receipt"></i>
+                            <span>Updated Total</span>
+                        </div>
+                        <div class="total-amount" id="editTotalPrice">$0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button class="modal-btn secondary" onclick="closeEditModal()">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+                <button class="modal-btn primary" onclick="saveItemChanges()">
+                    <i class="fas fa-save"></i>
+                    <span>Save Changes</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentEditItem = null;
+        let editSelectedAddons = [];
+        let editAddonPrices = {};
+        let editAddonConflicts = {};
+        let editMenuItemPrice = 0;
+
+        function updateQuantity(itemId, newQuantity) {
+            if (newQuantity < 1) {
+                removeItem(itemId);
+                return;
+            }
+
+            fetch('@Url.Action("UpdateCartItem", "Customer")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `cartItemId=${itemId}&quantity=${newQuantity}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error updating quantity: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating quantity.');
+            });
+        }
+
+        function removeItem(itemId) {
+            if (!confirm('Are you sure you want to remove this item from your cart?')) {
+                return;
+            }
+
+            fetch('@Url.Action("RemoveCartItem", "Customer")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `cartItemId=${itemId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error removing item: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while removing the item.');
+            });
+        }
+
+        function clearCart() {
+            if (!confirm('Are you sure you want to clear your entire cart? This action cannot be undone.')) {
+                return;
+            }
+
+            fetch('@Url.Action("ClearCart", "Customer")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `tableId=@Model.TableId`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error clearing cart: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while clearing the cart.');
+            });
+        }
+    </script>
+    
+    
+    <script>
+        // Edit Item Functions
+        function editItem(cartItemId) {
+            currentEditItem = cartItemId;
+            
+            // Get current cart item data
+            fetch('@Url.Action("GetCartItemDetails", "Customer")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `cartItemId=${cartItemId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Populate modal with current data
+                    document.getElementById('editCartItemId').value = cartItemId;
+                    document.getElementById('editItemName').textContent = data.item.menuItemName;
+                    document.getElementById('editItemCategory').textContent = data.item.category;
+                    document.getElementById('editQuantity').value = data.item.quantity;
+                    // Extract only the special instructions part (before |||)
+                    let specialInstructionsOnly = '';
+                    if (data.item.specialInstructions && data.item.specialInstructions.includes('|||')) {
+                        const parts = data.item.specialInstructions.split('|||');
+                        specialInstructionsOnly = parts[0].trim();
+                    } else {
+                        specialInstructionsOnly = data.item.specialInstructions || '';
+                    }
+                    document.getElementById('editSpecialInstructions').value = specialInstructionsOnly;
+                    
+                    editMenuItemPrice = data.item.unitPrice;
+                    
+                    // Load addons for this menu item with current special instructions
+                    loadEditAddons(data.item.menuItemId, data.item.specialInstructions);
+                    
+                    // Show modal
+                    document.getElementById('editItemModal').classList.add('show');
+                } else {
+                    alert('Error loading item details: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while loading item details.');
+            });
+        }
+
+        function loadEditAddons(menuItemId, currentSpecialInstructions) {
+            fetch('@Url.Action("GetAddonsForMenuItem", "Customer")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `menuItemId=${menuItemId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                const addonsList = document.getElementById('editAddonsList');
+                if (data.success && data.addons && data.addons.length > 0) {
+                    addonsList.innerHTML = '';
+                    data.addons.forEach(addon => {
+                        editAddonPrices[addon.id] = addon.price;
+                        
+                        // Parse conflicting addons
+                        let conflicts = [];
+                        if (addon.conflictingAddons) {
+                            conflicts = addon.conflictingAddons.split(',').map(id => id.trim()).filter(id => id);
+                        }
+                        editAddonConflicts[addon.id] = conflicts;
+                        
+                        const addonDiv = document.createElement('div');
+                        addonDiv.className = 'addon-item';
+                        addonDiv.innerHTML = `
+                            <label class="addon-label">
+                                <input type="checkbox" value="${addon.id}" onchange="toggleEditAddon(${addon.id}, ${addon.price})">
+                                <span class="addon-name">${addon.name}</span>
+                                <span class="addon-price">+$${addon.price.toFixed(2)}</span>
+                            </label>
+                        `;
+                        addonsList.appendChild(addonDiv);
+                    });
+
+                    // Pre-select addons based on current special instructions
+                    if (currentSpecialInstructions && currentSpecialInstructions.includes('|||')) {
+                        const parts = currentSpecialInstructions.split('|||');
+                        const addonString = parts.length > 1 ? parts[1].trim() : '';
+                        if (addonString) {
+                            // Parse addon names from the string (e.g., "Extra Cheese (+$2.00), No Ice (+$0.00)")
+                            const addonEntries = addonString.split(',').map(entry => entry.trim());
+                            addonEntries.forEach(addonEntry => {
+                                // Extract addon name (before the "(+$X.XX)" part)
+                                const addonName = addonEntry.split('(+')[0].trim();
+                                
+                                // Find matching addon in the list and pre-select it
+                                document.querySelectorAll('#editAddonsList input[type="checkbox"]').forEach(checkbox => {
+                                    const addonElement = checkbox.closest('.addon-item');
+                                    const addonNameElement = addonElement.querySelector('.addon-name');
+                                    if (addonNameElement && addonNameElement.textContent.trim() === addonName) {
+                                        checkbox.checked = true;
+                                        editSelectedAddons.push(parseInt(checkbox.value));
+                                    }
+                                });
+                            });
+                        }
+                    }
+                    
+                    // Apply bidirectional conflicts after pre-selection
+                    applyEditConflictingAddons();
+
+                } else {
+                    addonsList.innerHTML = '<div class="no-addons"><i class="fas fa-info-circle"></i><span>No addons available for this item.</span></div>';
+                }
+                
+                updateEditTotalPrice();
+            })
+            .catch(error => {
+                console.error('Error loading addons:', error);
+                document.getElementById('editAddonsList').innerHTML = '<div class="no-addons"><i class="fas fa-exclamation-circle"></i><span>Error loading addons.</span></div>';
+            });
+        }
+
+        function toggleEditAddon(addonId, addonPrice) {
+            const checkbox = document.querySelector(`#editAddonsList input[value="${addonId}"]`);
+            if (checkbox.checked) {
+                if (!editSelectedAddons.includes(addonId)) {
+                    editSelectedAddons.push(addonId);
+                }
+                
+                // Apply bidirectional conflicts
+                applyEditConflictingAddons();
+            } else {
+                editSelectedAddons = editSelectedAddons.filter(id => id !== addonId);
+                
+                // Re-evaluate all conflicts after removal
+                applyEditConflictingAddons();
+            }
+            updateEditTotalPrice();
+        }
+
+        function applyEditConflictingAddons() {
+            // Reset all addons to enabled state first
+            document.querySelectorAll('#editAddonsList input[type="checkbox"]').forEach(cb => {
+                cb.disabled = false;
+                cb.closest('.addon-item').classList.remove('conflicting-disabled');
+            });
+
+            // For each selected addon, disable its conflicts
+            editSelectedAddons.forEach(selectedId => {
+                const conflicts = editAddonConflicts[selectedId] || [];
+                conflicts.forEach(conflictId => {
+                    const conflictCheckbox = document.querySelector(`#editAddonsList input[value="${conflictId}"]`);
+                    if (conflictCheckbox) {
+                        conflictCheckbox.disabled = true;
+                        conflictCheckbox.checked = false;
+                        // Remove from editSelectedAddons if it was selected
+                        editSelectedAddons = editSelectedAddons.filter(id => id !== conflictId);
+                        conflictCheckbox.closest('.addon-item').classList.add('conflicting-disabled');
+                    }
+                });
+
+                // Also check if this selected addon conflicts with any other selected addon
+                editSelectedAddons.forEach(otherSelectedId => {
+                    if (otherSelectedId !== selectedId) {
+                        const otherConflicts = editAddonConflicts[otherSelectedId] || [];
+                        if (otherConflicts.includes(selectedId)) {
+                            // This addon conflicts with another selected addon, so disable it
+                            const selectedCheckbox = document.querySelector(`#editAddonsList input[value="${selectedId}"]`);
+                            if (selectedCheckbox) {
+                                selectedCheckbox.disabled = true;
+                                selectedCheckbox.checked = false;
+                                editSelectedAddons = editSelectedAddons.filter(id => id !== selectedId);
+                                selectedCheckbox.closest('.addon-item').classList.add('conflicting-disabled');
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        function increaseEditQuantity() {
+            const quantityInput = document.getElementById('editQuantity');
+            const currentValue = parseInt(quantityInput.value);
+            if (currentValue < 10) {
+                quantityInput.value = currentValue + 1;
+                updateEditTotalPrice();
+            }
+        }
+
+        function decreaseEditQuantity() {
+            const quantityInput = document.getElementById('editQuantity');
+            const currentValue = parseInt(quantityInput.value);
+            if (currentValue > 1) {
+                quantityInput.value = currentValue - 1;
+                updateEditTotalPrice();
+            }
+        }
+
+        function updateEditTotalPrice() {
+            const quantity = parseInt(document.getElementById('editQuantity').value);
+            const addonTotal = editSelectedAddons.reduce((sum, addonId) => sum + (editAddonPrices[addonId] || 0), 0);
+            const totalPrice = (editMenuItemPrice + addonTotal) * quantity;
+            
+            document.getElementById('editTotalPrice').textContent = '$' + totalPrice.toFixed(2);
+        }
+
+        function saveItemChanges() {
+            const cartItemId = document.getElementById('editCartItemId').value;
+            const quantity = parseInt(document.getElementById('editQuantity').value);
+            const specialInstructions = document.getElementById('editSpecialInstructions').value;
+            const selectedAddonsString = editSelectedAddons.join(',');
+
+            // Show loading state
+            const saveButton = event.target;
+            const originalText = saveButton.innerHTML;
+            saveButton.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite;"></span> Saving...';
+            saveButton.disabled = true;
+
+            // Make API call
+            fetch('@Url.Action("UpdateCartItemDetails", "Customer")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `cartItemId=${cartItemId}&quantity=${quantity}&specialInstructions=${encodeURIComponent(specialInstructions)}&selectedAddons=${selectedAddonsString}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeEditModal();
+                    location.reload(); // Refresh to show updated cart
+                } else {
+                    alert('Error updating item: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the item.');
+            })
+            .finally(() => {
+                saveButton.innerHTML = originalText;
+                saveButton.disabled = false;
+            });
+        }
+
+        function closeEditModal() {
+            document.getElementById('editItemModal').classList.remove('show');
+            currentEditItem = null;
+            editSelectedAddons = [];
+            editAddonPrices = {};
+            editAddonConflicts = {};
+            editMenuItemPrice = 0;
+        }
+
+        // Add event listeners for quantity input
+        document.addEventListener('DOMContentLoaded', function() {
+            const editQuantityInput = document.getElementById('editQuantity');
+            if (editQuantityInput) {
+                editQuantityInput.addEventListener('input', updateEditTotalPrice);
+            }
+        });
+    </script>
+}

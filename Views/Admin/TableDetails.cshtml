@@ -1,0 +1,294 @@
+@model TableDetailsViewModel
+@{
+    ViewData["Title"] = "Table Details - Table " + Model.Table.Id;
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-styles.css" />
+}
+
+<!-- Page Header -->
+<header class="page-header">
+    <div class="header-content">
+        <div class="header-left">
+            <h1 class="page-title">
+                <i class="fas fa-table"></i>
+                Table @Model.Table.Id Details
+            </h1>
+            <p class="page-subtitle">
+                Status: 
+                <span class="status-indicator status-@(Model.Table.IsOccupied ? "occupied" : "available")">
+                    @(Model.Table.IsOccupied ? "Occupied" : "Available")
+                </span>
+            </p>
+        </div>
+        <div class="header-actions">
+            @if (Model.Table.IsOccupied)
+            {
+                <button class="btn btn-danger" onclick="clearTable(@Model.Table.Id)">
+                    <i class="fas fa-trash"></i>
+                    Clear Table
+                </button>
+            }
+        </div>
+    </div>
+</header>
+
+<!-- Floating Success Message -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="floatingSuccessMessage" class="floating-success-message">
+        <i class="fas fa-check-circle"></i>
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (Model.Table.IsOccupied && Model.CurrentOrder != null)
+{
+    <!-- Content Grid -->
+    <section class="content-grid">
+        <!-- Current Order -->
+        <div class="order-container">
+            <div class="order-header">
+                <h2>
+                    <i class="fas fa-receipt"></i>
+                    Current Order #@Model.CurrentOrder.Id
+                </h2>
+            </div>
+            <div class="order-content">
+                <div class="order-info-grid">
+                    <div class="info-section">
+                        <h4>Order Details</h4>
+                        <p><strong>Order Time:</strong> @Model.CurrentOrder.OrderDate.ToString("MMM dd, yyyy h:mm tt")</p>
+                        <p><strong>Order Type:</strong> @Model.CurrentOrder.Type</p>
+                        <p><strong>Status:</strong> 
+                            <span class="status-indicator status-@Model.CurrentOrder.Status.ToLower()">
+                                @Model.CurrentOrder.Status
+                            </span>
+                        </p>
+                        <p><strong>Total Amount:</strong> $@Model.CurrentOrder.TotalAmount.ToString("F2")</p>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <div class="order-items-section">
+                    <h4>Order Items</h4>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Subtotal</th>
+                                    <th>Special Instructions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.CurrentOrder.Items)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@item.MenuItem.Name</strong>
+                                            <br>
+                                            <small class="text-muted">@item.MenuItem.Category</small>
+                                        </td>
+                                        <td>@item.Quantity</td>
+                                        <td>$@item.MenuItem.Price.ToString("F2")</td>
+                                        <td>$@item.Subtotal.ToString("F2")</td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(item.SpecialInstructions))
+                                            {
+                                                <span class="text-muted">@item.SpecialInstructions</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">None</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Order Actions -->
+                <div class="order-actions">
+                    <button class="btn btn-primary" onclick="addItemToOrder(@Model.Table.Id)">
+                        <i class="fas fa-plus"></i>
+                        Add Item
+                    </button>
+                    <button class="btn btn-success" onclick="markOrderComplete(@Model.CurrentOrder.Id)">
+                        <i class="fas fa-check"></i>
+                        Mark Complete
+                    </button>
+                    <button class="btn btn-warning" onclick="printOrder(@Model.CurrentOrder.Id)">
+                        <i class="fas fa-print"></i>
+                        Print Order
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary & Table Info -->
+        <div class="summary-container">
+            <!-- Order Summary -->
+            <div class="summary-card">
+                <div class="summary-header">
+                    <h3>
+                        <i class="fas fa-calculator"></i>
+                        Order Summary
+                    </h3>
+                </div>
+                <div class="summary-content">
+                    @{
+                        var subtotal = Model.CurrentOrder.Items.Sum(i => i.Subtotal);
+                        var tax = subtotal * 0.06m;
+                        var grandTotal = Model.CurrentOrder.TotalAmount; // Use database total (includes tax)
+                    }
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span>$@subtotal.ToString("F2")</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Tax (6%):</span>
+                        <span>$@tax.ToString("F2")</span>
+                    </div>
+                    <hr>
+                    <div class="summary-row total">
+                        <span>Total:</span>
+                        <span>$@grandTotal.ToString("F2")</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Information -->
+            <div class="table-info-card">
+                <div class="table-info-header">
+                    <h3>
+                        <i class="fas fa-table"></i>
+                        Table Information
+                    </h3>
+                </div>
+                <div class="table-info-content">
+                    <p><strong>Table Number:</strong> @Model.Table.Id</p>
+                    <p><strong>Capacity:</strong> @Model.Table.Pax seats</p>
+                    <p><strong>Status:</strong> 
+                        <span class="status-indicator status-@(Model.Table.IsOccupied ? "occupied" : "available")">
+                            @(Model.Table.IsOccupied ? "Occupied" : "Available")
+                        </span>
+                    </p>
+                    <p><strong>Occupied Since:</strong> @Model.CurrentOrder.OrderDate.ToString("h:mm tt")</p>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+else
+{
+    <!-- Empty Table -->
+    <section class="empty-table-section">
+        <div class="empty-table-card">
+            <div class="empty-table-content">
+                <i class="fas fa-table fa-4x text-muted mb-4"></i>
+                <h3 class="text-muted mb-3">Table @Model.Table.Id is Available</h3>
+                <p class="text-muted mb-4">This table is currently not occupied and ready for new customers.</p>
+                <div class="empty-table-actions">
+                    <button class="btn btn-primary" onclick="startNewOrder(@Model.Table.Id)">
+                        <i class="fas fa-plus"></i>
+                        Start New Order
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+
+@section Scripts {
+    <script>
+        function clearTable(tableId) {
+            if (!confirm('Are you sure you want to clear this table? This will mark the current order as completed.')) {
+                return;
+            }
+
+            fetch('@Url.Action("ClearTable", "Admin")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `tableId=${tableId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error clearing table: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while clearing the table.');
+            });
+        }
+
+        function addItemToOrder(tableId) {
+            // Redirect to add item page
+            window.location.href = '@Url.Action("AddOrder", "Admin")?tableId=' + tableId;
+        }
+
+        function markOrderComplete(orderId) {
+            if (!confirm('Are you sure you want to mark this order as complete?')) {
+                return;
+            }
+
+            fetch('@Url.Action("MarkOrderComplete", "Admin")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `orderId=${orderId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error marking order complete: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the order.');
+            });
+        }
+
+        function printOrder(orderId) {
+            // Open print dialog for order
+            window.open('@Url.Action("PrintOrder", "Admin")?orderId=' + orderId, '_blank');
+        }
+
+        function startNewOrder(tableId) {
+            // Redirect to add order page
+            window.location.href = '@Url.Action("AddOrder", "Admin")?tableId=' + tableId;
+        }
+
+        // Auto-hide floating success message
+        document.addEventListener('DOMContentLoaded', function() {
+            const floatingMessage = document.getElementById('floatingSuccessMessage');
+            if (floatingMessage) {
+                // Hide message after 2 seconds
+                setTimeout(function() {
+                    floatingMessage.style.animation = 'slideOutRight 0.3s ease-in';
+                    setTimeout(function() {
+                        floatingMessage.remove();
+                    }, 300);
+                }, 2000);
+            }
+        });
+
+    </script>
+}

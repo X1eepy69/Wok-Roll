@@ -1,0 +1,508 @@
+@model MenuItem
+@{
+    ViewData["Title"] = "Manage Addons - " + Model.Name;
+    Layout = "_AdminLayout";
+}
+
+<div class="menu-item-addons-page">
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-styles.css" />
+}
+
+<!-- Top Bar -->
+<header class="top-bar">
+    <div class="top-bar-left">
+        <div class="breadcrumb">
+            <a asp-action="Index">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <a asp-action="Menu">Menu Management</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Manage Addons</span>
+        </div>
+        <h1>Manage Addons</h1>
+        <p>@Model.Name (@Model.Id) - Configure customizations and modifications</p>
+    </div>
+    <div class="top-bar-right">
+        <div class="quick-actions">
+            <a asp-action="CreateAddon" asp-route-menuItemId="@Model.Id" class="btn-primary">
+                <i class="fas fa-plus"></i>
+                Add New Addon
+            </a>
+            <a asp-action="EditMenuItem" asp-route-id="@Model.Id" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Edit Item
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- Alerts -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Anti-forgery token -->
+@Html.AntiForgeryToken()
+
+<!-- Content Grid -->
+<section class="content-grid">
+    <!-- Addons Table -->
+    <div class="addons-container">
+        <div class="addons-header">
+            <h3>
+                <i class="fas fa-list"></i>
+                Current Addons (@(Model.Addons?.Count ?? 0))
+            </h3>
+        </div>
+        <div class="addons-content">
+            @if (Model.Addons != null && Model.Addons.Any())
+            {
+                <div class="table-responsive">
+                    <table class="addons-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Type</th>
+                                <th>Required</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var addon in Model.Addons)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@addon.Name</strong>
+                                    </td>
+                                    <td>
+                                        <span class="price-badge">+$@addon.Price.ToString("F2")</span>
+                                    </td>
+                                    <td>
+                                        <span class="type-badge @(addon.Type == "Required" ? "required" : "optional")">
+                                            @addon.Type
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (addon.IsRequired)
+                                        {
+                                            <i class="fas fa-check-circle text-success"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-times-circle text-muted"></i>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-btn edit" 
+                                                    data-id="@addon.Id" 
+                                                    data-name="@addon.Name"
+                                                    data-price="@addon.Price"
+                                                    data-type="@addon.Type"
+                                                    data-required="@addon.IsRequired"
+                                                    data-conflicting="@addon.ConflictingAddons"
+                                                    title="Edit Addon">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="action-btn delete" 
+                                                    data-id="@addon.Id" 
+                                                    data-name="@addon.Name"
+                                                    title="Delete Addon">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <h3>No addons configured</h3>
+                    <p>Add customizations and modifications for this menu item.</p>
+                    <a asp-action="CreateAddon" asp-route-menuItemId="@Model.Id" class="btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Add First Addon
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <!-- Menu Item Info -->
+    <div class="menu-info-container">
+        <div class="menu-info-header">
+            <h3>
+                <i class="fas fa-info-circle"></i>
+                Menu Item Info
+            </h3>
+        </div>
+        <div class="menu-info-content">
+            <div class="menu-item-preview">
+                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                {
+                    <img src="@Model.ImagePath" alt="@Model.Name" />
+                }
+                else
+                {
+                    <div class="image-placeholder">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                }
+            </div>
+            <div class="menu-item-details">
+                <h4>@Model.Name</h4>
+                <p>@Model.Description</p>
+                <div class="item-meta">
+                    <span class="price">$@Model.Price.ToString("F2")</span>
+                    <span class="status-badge @(Model.IsAvailable ? "available" : "unavailable")">
+                        @(Model.IsAvailable ? "Available" : "Unavailable")
+                    </span>
+                </div>
+                <div class="item-category">
+                    <i class="fas fa-tag"></i>
+                    <span>@Model.Category</span>
+                </div>
+                <div class="item-date">
+                    <i class="fas fa-clock"></i>
+                    <span>Created: @Model.CreatedAt.ToString("MMM dd, yyyy")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Confirm Delete
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the addon <strong id="addonNameToDelete"></strong>?</p>
+                <p class="text-danger">
+                    <small><i class="fas fa-exclamation-triangle"></i> This action cannot be undone.</small>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button type="button" class="btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i>
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Addon Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">
+                    <i class="fas fa-edit"></i>
+                    Edit Addon
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editAddonForm">
+                <div class="modal-body">
+                    <input type="hidden" id="editAddonId" name="Id" />
+                    
+                    <div class="form-group mb-3">
+                        <label for="editAddonName" class="form-label">Addon Name</label>
+                        <input type="text" class="form-control" id="editAddonName" name="Name" required>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="editAddonPrice" class="form-label">Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="editAddonPrice" name="Price" step="0.01" min="0" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="editAddonType" class="form-label">Type</label>
+                        <select class="form-control" id="editAddonType" name="Type">
+                            <option value="Optional">Optional</option>
+                            <option value="Required">Required</option>
+                            <option value="Choice">Choice</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="editAddonRequired" name="IsRequired">
+                            <label class="form-check-label" for="editAddonRequired">
+                                Required Addon
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label class="form-label">Conflicting Addons</label>
+                        <div class="conflicting-addons-container">
+                            <div class="conflicting-addons-info">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Select addons that cannot be selected together with this addon.</span>
+                            </div>
+                            <div class="conflicting-addons-list" id="editConflictingAddonsList">
+                                <!-- Conflicting addons will be loaded here -->
+                            </div>
+                            <input type="hidden" id="editConflictingAddonsInput" name="ConflictingAddons" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i>
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let addonToDelete = null;
+
+        // Delete addon functionality
+        document.querySelectorAll('.action-btn.delete').forEach(btn => {
+            btn.addEventListener('click', function() {
+                addonToDelete = {
+                    id: this.dataset.id,
+                    name: this.dataset.name
+                };
+                
+                document.getElementById('addonNameToDelete').textContent = addonToDelete.name;
+                const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+                modal.show();
+            });
+        });
+
+        // Confirm delete
+        document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+            if (addonToDelete) {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]');
+                if (!token) {
+                    alert('Security token not found. Please refresh the page and try again.');
+                    return;
+                }
+
+                fetch('@Url.Action("DeleteAddon", "Admin")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': token.value
+                    },
+                    body: `AddonId=${addonToDelete.id}`
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Close modal first
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+                        modal.hide();
+                        // Then reload
+                        location.reload();
+                    } else {
+                        alert('Error deleting addon: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while deleting the addon: ' + error.message);
+                });
+            }
+        });
+
+        // Auto-dismiss alerts
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+
+        // Edit addon functionality
+        let addonToEdit = null;
+        let allAddons = [];
+
+        // Load all addons for conflicting addons selection
+        function loadAllAddons() {
+            fetch('@Url.Action("GetConflictingAddons", "Admin")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `menuItemId=@Model.Id`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    allAddons = data.addons;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading addons:', error);
+            });
+        }
+
+        // Edit addon button click
+        document.querySelectorAll('.action-btn.edit').forEach(btn => {
+            btn.addEventListener('click', function() {
+                addonToEdit = {
+                    id: this.dataset.id,
+                    name: this.dataset.name,
+                    price: this.dataset.price,
+                    type: this.dataset.type,
+                    required: this.dataset.required === 'True',
+                    conflicting: this.dataset.conflicting || ''
+                };
+                
+                // Populate form
+                document.getElementById('editAddonId').value = addonToEdit.id;
+                document.getElementById('editAddonName').value = addonToEdit.name;
+                document.getElementById('editAddonPrice').value = addonToEdit.price;
+                document.getElementById('editAddonType').value = addonToEdit.type;
+                document.getElementById('editAddonRequired').checked = addonToEdit.required;
+                
+                // Load conflicting addons
+                loadConflictingAddonsForEdit();
+                
+                const modal = new bootstrap.Modal(document.getElementById('editModal'));
+                modal.show();
+            });
+        });
+
+        // Load conflicting addons for edit
+        function loadConflictingAddonsForEdit() {
+            const container = document.getElementById('editConflictingAddonsList');
+            
+            if (allAddons.length === 0) {
+                container.innerHTML = '<div class="no-conflicts"><i class="fas fa-check-circle"></i><span>No conflicting addons available</span></div>';
+                return;
+            }
+            
+            // Filter out the current addon being edited
+            const otherAddons = allAddons.filter(addon => addon.id != addonToEdit.id);
+            
+            if (otherAddons.length === 0) {
+                container.innerHTML = '<div class="no-conflicts"><i class="fas fa-check-circle"></i><span>No other addons to conflict with</span></div>';
+                return;
+            }
+            
+            container.innerHTML = otherAddons.map(addon => `
+                <div class="conflicting-addon-item">
+                    <input type="checkbox" 
+                           class="conflicting-addon-checkbox" 
+                           value="${addon.id}"
+                           ${addonToEdit.conflicting.includes(addon.id) ? 'checked' : ''}
+                           onchange="updateEditConflictingAddons()">
+                    <span class="conflicting-addon-name">${addon.name}</span>
+                    <span class="conflicting-addon-price">+$${addon.price.toFixed(2)}</span>
+                </div>
+            `).join('');
+            
+            updateEditConflictingAddons();
+        }
+
+        // Update conflicting addons selection
+        function updateEditConflictingAddons() {
+            const checkboxes = document.querySelectorAll('#editConflictingAddonsList .conflicting-addon-checkbox:checked');
+            const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+            document.getElementById('editConflictingAddonsInput').value = selectedIds.join(',');
+        }
+
+        // Edit form submission
+        document.getElementById('editAddonForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!addonToEdit) return;
+            
+            const formData = new FormData(this);
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            
+            if (!token) {
+                alert('Security token not found. Please refresh the page and try again.');
+                return;
+            }
+            
+            formData.append('__RequestVerificationToken', token.value);
+            
+            fetch('@Url.Action("EditAddon", "Admin")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+                    modal.hide();
+                    location.reload();
+                } else {
+                    alert('Error updating addon: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the addon: ' + error.message);
+            });
+        });
+
+        // Load all addons on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAllAddons();
+        });
+    </script>
+    
+}
+
+</div>

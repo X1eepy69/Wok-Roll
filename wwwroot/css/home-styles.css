@@ -1,0 +1,173 @@
+/* Home Page Styles */
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, var(--primary-orange) 0%, var(--primary-orange-dark) 100%);
+    color: var(--white);
+    padding: var(--spacing-16) 0;
+    text-align: center;
+}
+
+.hero-icon {
+    font-size: 5rem;
+    color: var(--white);
+    margin-bottom: var(--spacing-8);
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-8);
+    color: var(--white);
+}
+
+.hero-subtitle {
+    font-size: 1.5rem;
+    margin-bottom: var(--spacing-12);
+    color: rgba(255,255,255,0.9);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.hero-btn-primary {
+    background: var(--white);
+    color: var(--primary-orange);
+    padding: var(--spacing-4) var(--spacing-8);
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.hero-btn-secondary {
+    background: transparent;
+    color: var(--white);
+    border: 2px solid var(--white);
+    padding: var(--spacing-4) var(--spacing-8);
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* Page Content */
+.page-content {
+    padding: var(--spacing-16) 0;
+}
+
+.section-title {
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: var(--spacing-4);
+}
+
+.section-subtitle {
+    font-size: 1.2rem;
+    color: var(--gray-600);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Feature Cards */
+.feature-card {
+    text-align: center;
+    padding: var(--spacing-8);
+    height: 100%;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    margin-bottom: var(--spacing-4);
+}
+
+.feature-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    color: var(--primary-orange);
+    margin-bottom: var(--spacing-3);
+}
+
+.feature-title {
+    color: var(--gray-900);
+    margin-bottom: var(--spacing-4);
+}
+
+.feature-description {
+    color: var(--gray-600);
+}
+
+/* How It Works Section */
+.how-it-works-section {
+    background: var(--gray-50);
+    padding: var(--spacing-16) 0;
+}
+
+.step-number {
+    width: 80px;
+    height: 80px;
+    background: var(--primary-orange);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 auto var(--spacing-4);
+}
+
+.step-title {
+    color: var(--gray-900);
+    margin-bottom: var(--spacing-3);
+}
+
+.step-description {
+    color: var(--gray-600);
+}
+
+/* CTA Section */
+.cta-section {
+    background: var(--primary-orange);
+    color: var(--white);
+    padding: var(--spacing-16) 0;
+    text-align: center;
+}
+
+.cta-title {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-4);
+    color: var(--white);
+}
+
+.cta-subtitle {
+    font-size: 1.2rem;
+    margin-bottom: var(--spacing-8);
+    color: rgba(255,255,255,0.9);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.cta-btn {
+    background: var(--white);
+    color: var(--primary-orange);
+    padding: var(--spacing-4) var(--spacing-8);
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* Animation Classes */
+.fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+}

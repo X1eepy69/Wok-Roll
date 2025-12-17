@@ -1,0 +1,280 @@
+@model List<GroupedPendingOrderViewModel>
+@{
+    ViewData["Title"] = "Pending Orders";
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-styles.css" />
+}
+
+<!-- Top Bar -->
+<header class="top-bar">
+    <div class="top-bar-left">
+        <div class="breadcrumb">
+            <a asp-action="Index">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Pending Orders</span>
+        </div>
+        <h1>Pending Orders</h1>
+        <p>Orders awaiting payment at the counter</p>
+    </div>
+    <div class="top-bar-right">
+        <div class="quick-actions">
+            <a asp-action="TransactionHistory" class="btn-secondary">
+                <i class="fas fa-history"></i>
+                View All Orders
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- Floating Success Message -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="floatingSuccessMessage" class="floating-success-message">
+        <i class="fas fa-check-circle"></i>
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<!-- Floating Error Message -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div id="floatingErrorMessage" class="floating-error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<!-- Pending Orders Content -->
+<section class="pending-orders-content">
+    @if (Model.Any())
+    {
+        <div class="orders-container">
+            @foreach (var groupedOrder in Model)
+            {
+                <div class="content-card order-card">
+                    <div class="card-header">
+                        <div class="order-header-info">
+                            <h3>
+                                <i class="fas fa-receipt"></i>
+                                Combined Orders - Table @groupedOrder.TableNumber
+                            </h3>
+                            <div class="order-meta">
+                                <span class="order-count">
+                                    <i class="fas fa-list"></i>
+                                    @groupedOrder.OriginalOrderIds.Count orders combined
+                                </span>
+                                <span class="order-date">
+                                    <i class="fas fa-clock"></i>
+                                    @groupedOrder.FirstOrderDate.ToString("MMM dd, yyyy HH:mm")
+                                    @if (groupedOrder.FirstOrderDate != groupedOrder.LastOrderDate)
+                                    {
+                                        <text> - @groupedOrder.LastOrderDate.ToString("MMM dd, yyyy HH:mm")</text>
+                                    }
+                                </span>
+                            </div>
+                        </div>
+                        <div class="order-status">
+                            <span class="status-badge pending">Pending Payment</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-content">
+
+                        <div class="order-items">
+                            @foreach (var item in groupedOrder.CombinedItems)
+                            {
+                                <div class="order-item">
+                                    <div class="item-info">
+                                        <span class="item-name">@item.MenuItem.Name</span>
+                                        <span class="item-quantity">x @item.Quantity</span>
+                                    </div>
+                                    <span class="item-price">$@item.Subtotal.ToString("F2")</span>
+                                </div>
+                                @if (!string.IsNullOrEmpty(item.SpecialInstructions))
+                                {
+                                    var instructions = item.SpecialInstructions.Split(new[] { "|||" }, StringSplitOptions.None);
+                                    var specialInstructions = instructions.Length > 0 ? instructions[0].Trim() : "";
+                                    var addons = instructions.Length > 1 ? instructions[1].Trim() : "";
+                                    
+                                    if (!string.IsNullOrEmpty(specialInstructions))
+                                    {
+                                        <div class="special-instructions">
+                                            <i class="fas fa-sticky-note"></i>
+                                            <span>@specialInstructions</span>
+                                        </div>
+                                    }
+                                    
+                                    if (!string.IsNullOrEmpty(addons))
+                                    {
+                                        <div class="addons-info">
+                                            <i class="fas fa-plus-circle"></i>
+                                            <span>@addons</span>
+                                        </div>
+                                    }
+                                }
+                            }
+                        </div>
+
+                        <div class="order-footer">
+                            <div class="order-total">
+                                <span class="total-label">Total:</span>
+                                <span class="total-amount">$@groupedOrder.TotalAmount.ToString("F2")</span>
+                            </div>
+                            <div class="order-actions">
+                                <button class="btn-primary mark-paid-btn" 
+                                        data-order-ids="@string.Join(",", groupedOrder.OriginalOrderIds)" 
+                                        data-order-total="@groupedOrder.TotalAmount">
+                                    <i class="fas fa-check-circle"></i>
+                                    Mark as Paid
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="content-card">
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-receipt"></i>
+                </div>
+                <h3>No Pending Orders</h3>
+                <p>All orders have been paid or there are no orders awaiting payment.</p>
+            </div>
+        </div>
+    }
+</section>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmPaymentModal" tabindex="-1" aria-labelledby="confirmPaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmPaymentModalLabel">
+                    <i class="fas fa-check-circle"></i>
+                    Confirm Payment
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to mark this combined order as paid?</p>
+                <div class="payment-details">
+                    <div class="detail-row">
+                        <span class="label">Order IDs:</span>
+                        <span class="value" id="modalOrderIds"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Table:</span>
+                        <span class="value" id="modalTableNumber"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Total Amount:</span>
+                        <span class="value" id="modalOrderTotal"></span>
+                    </div>
+                </div>
+                <p class="text-muted">
+                    <small><i class="fas fa-info-circle"></i> This will mark all related orders as completed. This action cannot be undone.</small>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button type="button" class="btn-primary" id="confirmPaymentBtn">
+                    <i class="fas fa-check"></i>
+                    Confirm Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let orderToMarkPaid = null;
+
+        // Mark as paid button click
+        document.querySelectorAll('.mark-paid-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const orderIds = this.dataset.orderIds.split(',');
+                const tableNumber = this.closest('.order-card').querySelector('.order-header-info h3').textContent.trim().replace('Combined Orders - Table ', '');
+                
+                orderToMarkPaid = {
+                    ids: this.dataset.orderIds,
+                    total: this.dataset.orderTotal
+                };
+                
+                document.getElementById('modalOrderIds').textContent = '#' + orderIds.join(', #');
+                document.getElementById('modalTableNumber').textContent = tableNumber;
+                document.getElementById('modalOrderTotal').textContent = '$' + parseFloat(orderToMarkPaid.total).toFixed(2);
+                
+                const modal = new bootstrap.Modal(document.getElementById('confirmPaymentModal'));
+                modal.show();
+            });
+        });
+
+        // Confirm payment
+        document.getElementById('confirmPaymentBtn').addEventListener('click', function() {
+            if (orderToMarkPaid) {
+                // Show loading state
+                const btn = this;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite;"></span> Processing...';
+                btn.disabled = true;
+
+                fetch('@Url.Action("MarkOrderAsPaid", "Admin")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                    },
+                    body: `orderIds=${orderToMarkPaid.ids}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('confirmPaymentModal'));
+                        modal.hide();
+                        // Reload page to show updated list
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while processing the payment.');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            }
+        });
+
+        // Auto-dismiss floating messages
+        setTimeout(function() {
+            const successMsg = document.getElementById('floatingSuccessMessage');
+            const errorMsg = document.getElementById('floatingErrorMessage');
+            
+            if (successMsg) {
+                successMsg.style.opacity = '0';
+                setTimeout(() => successMsg.remove(), 300);
+            }
+            
+            if (errorMsg) {
+                errorMsg.style.opacity = '0';
+                setTimeout(() => errorMsg.remove(), 300);
+            }
+        }, 5000);
+    </script>
+    
+}

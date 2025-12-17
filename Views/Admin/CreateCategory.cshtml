@@ -1,0 +1,178 @@
+@model Category
+@{
+    ViewData["Title"] = "Create Category";
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-styles.css" />
+}
+
+<!-- Top Bar -->
+<header class="top-bar">
+    <div class="top-bar-left">
+        <div class="breadcrumb">
+            <a asp-action="Index">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <a asp-action="Categories">Categories</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Create Category</span>
+        </div>
+        <h1>Create Category</h1>
+        <p>Add a new category for organizing menu items</p>
+    </div>
+    <div class="top-bar-right">
+        <div class="quick-actions">
+            <a asp-action="Categories" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Categories
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- Floating Success Message -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="floatingSuccessMessage" class="floating-success-message">
+        <i class="fas fa-check-circle"></i>
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<!-- Floating Error Message -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div id="floatingErrorMessage" class="floating-error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<!-- Create Category Content -->
+<section class="create-category-content">
+    <div class="form-container">
+        <div class="form-card">
+            <div class="form-header">
+                <h3>
+                    <i class="fas fa-tags"></i>
+                    Category Details
+                </h3>
+                <p>Fill in the details for your new category</p>
+            </div>
+            
+            <form asp-action="CreateCategory" method="post" class="create-form">
+                <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label asp-for="Name" class="form-label">
+                            <i class="fas fa-tag"></i>
+                            Category Name
+                        </label>
+                        <input asp-for="Name" class="form-input" placeholder="e.g., Main Dish, Appetizer, etc." />
+                        <span asp-validation-for="Name" class="field-validation"></span>
+                        <div class="form-help">This will be displayed to customers</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label asp-for="Prefix" class="form-label">
+                            <i class="fas fa-hashtag"></i>
+                            ID Prefix
+                        </label>
+                        <input asp-for="Prefix" class="form-input" placeholder="e.g., M, A, D, etc." maxlength="10" />
+                        <span asp-validation-for="Prefix" class="field-validation"></span>
+                        <div class="form-help">Used for auto-generating menu item IDs (e.g., M001, M002, etc.)</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label asp-for="Description" class="form-label">
+                            <i class="fas fa-align-left"></i>
+                            Description
+                        </label>
+                        <textarea asp-for="Description" class="form-textarea" rows="3" placeholder="Optional description for this category"></textarea>
+                        <span asp-validation-for="Description" class="field-validation"></span>
+                        <div class="form-help">Optional description to help identify this category</div>
+                    </div>
+                </div>
+
+                <div class="form-row two-columns">
+                    <div class="form-group">
+                        <label asp-for="DisplayOrder" class="form-label">
+                            <i class="fas fa-sort-numeric-up"></i>
+                            Display Order
+                        </label>
+                        <input asp-for="DisplayOrder" class="form-input" type="number" value="0" min="0" />
+                        <span asp-validation-for="DisplayOrder" class="field-validation"></span>
+                        <div class="form-help">Lower numbers appear first. Available orders: 0-999</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-toggle-on"></i>
+                            Status
+                        </label>
+                        <div class="switch-container">
+                            <label class="switch">
+                                <input asp-for="IsActive" type="checkbox" checked />
+                                <span class="slider round"></span>
+                            </label>
+                            <span class="switch-label">Active</span>
+                        </div>
+                        <div class="form-help">Inactive categories won't appear in dropdowns</div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i>
+                        Create Category
+                    </button>
+                    <a asp-action="Categories" class="btn-secondary">
+                        <i class="fas fa-times"></i>
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+        
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Auto-hide floating messages
+        document.addEventListener('DOMContentLoaded', function() {
+            const floatingMessage = document.getElementById('floatingSuccessMessage');
+            const floatingError = document.getElementById('floatingErrorMessage');
+            
+            if (floatingMessage) {
+                setTimeout(function() {
+                    floatingMessage.style.animation = 'slideOutRight 0.3s ease-in';
+                    setTimeout(function() {
+                        floatingMessage.remove();
+                    }, 300);
+                }, 3000);
+            }
+            
+            if (floatingError) {
+                setTimeout(function() {
+                    floatingError.style.animation = 'slideOutRight 0.3s ease-in';
+                    setTimeout(function() {
+                        floatingError.remove();
+                    }, 300);
+                }, 5000);
+            }
+        });
+
+        // Auto-format prefix input
+        document.querySelector('input[name="Prefix"]').addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        });
+    </script>
+    
+}

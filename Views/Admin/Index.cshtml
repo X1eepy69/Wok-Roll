@@ -1,0 +1,367 @@
+@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "_AdminLayout";
+}
+
+<div class="admin-dashboard">
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-styles.css" />
+}
+
+
+<!-- Floating Welcome Message -->
+<div class="floating-welcome" id="floatingWelcome">
+    <div class="welcome-content">
+        <i class="fas fa-star"></i>
+        <span>Welcome to Wok & Roll Admin Dashboard!</span>
+        <button class="close-welcome" onclick="closeWelcome()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Top Bar -->
+<header class="top-bar">
+    <div class="top-bar-left">
+        <h1>Dashboard Overview</h1>
+        <p>Welcome back! Here's what's happening at your restaurant today.</p>
+    </div>
+</header>
+
+<!-- Stats Cards -->
+<section class="stats-section">
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-icon">
+                <i class="fas fa-table"></i>
+            </div>
+            <div class="stat-content">
+                <h2>@Model.TotalTables</h2>
+                <p>Total Tables</p>
+                <div class="stat-trend">
+                    <i class="fas fa-check-circle"></i>
+                    <span>All operational</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card success">
+            <div class="stat-icon">
+                <i class="fas fa-utensils"></i>
+            </div>
+            <div class="stat-content">
+                <h2>@Model.TotalMenuItems</h2>
+                <p>Menu Items</p>
+                <div class="stat-trend">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Ready to serve</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card info">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+                <h2>@Model.TotalUsers</h2>
+                <p>Registered Users</p>
+                <div class="stat-trend">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Growing community</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card warning">
+            <div class="stat-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="stat-content">
+                <h2>@Model.TotalOrders</h2>
+                <p>Total Orders</p>
+                <div class="stat-trend">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Revenue tracking</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Content Grid -->
+<section class="content-grid">
+    <!-- Tables Overview -->
+    <div class="content-card">
+        <div class="card-header">
+            <h3>
+                <i class="fas fa-table"></i>
+                Tables
+            </h3>
+        </div>
+        <div class="card-content">
+            <div class="tables-grid">
+                @foreach (var table in Model.Tables.Take(10))
+                {
+                    <div class="table-item @(table.IsOccupied ? "occupied" : "available")" 
+                         onclick="@(table.IsOccupied ? "viewTableDetails(" + table.Id + ")" : "selectTable(" + table.Id + ")")">
+                        <div class="table-number">@table.Id</div>
+                        <div class="table-info">
+                            @if (table.IsOccupied)
+                            {
+                                <span class="table-status occupied">
+                                    <i class="fas fa-user"></i>
+                                    Occupied
+                                </span>
+                                <span class="table-pax">@table.Pax guests</span>
+                            }
+                            else
+                            {
+                                <span class="table-status available">
+                                    <i class="fas fa-check"></i>
+                                    Available
+                                </span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="content-card">
+        <div class="card-header">
+            <h3>
+                <i class="fas fa-clock"></i>
+                Recent Activity
+            </h3>
+            <div class="activity-filters">
+                <button class="filter-btn active" onclick="filterActivity('all')">All</button>
+                <button class="filter-btn" onclick="filterActivity('orders')">Orders</button>
+                <button class="filter-btn" onclick="filterActivity('users')">Users</button>
+                </div>
+        </div>
+        <div class="card-content">
+            <div class="activity-list scrollable" id="activityList">
+                @{
+                    var allActivities = new List<dynamic>();
+                    
+                    // Add recent orders
+                    foreach (var order in Model.RecentOrders)
+                    {
+                        allActivities.Add(new { 
+                            Type = "order", 
+                            Data = order, 
+                            Date = order.OrderDate,
+                            SortDate = order.OrderDate
+                        });
+                    }
+                    
+                    // Add recent users
+                    foreach (var user in Model.RecentUsers)
+                    {
+                        allActivities.Add(new { 
+                            Type = "user", 
+                            Data = user, 
+                            Date = user.CreatedAt,
+                            SortDate = user.CreatedAt
+                        });
+                    }
+                    
+                    // Sort by date (most recent first)
+                    var sortedActivities = allActivities.OrderByDescending(a => a.SortDate).Take(15).ToList();
+                }
+                
+                @if (sortedActivities.Any())
+                {
+                    @foreach (var activity in sortedActivities)
+                    {
+                        @if (activity.Type == "order")
+                        {
+                            var order = (Order)activity.Data;
+                            <div class="activity-item order-activity" onclick="viewTableDetails(@order.TableId)">
+                                <div class="activity-icon order-icon">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                                <div class="activity-details">
+                                    <h4>New Order #@order.Id</h4>
+                                    <p>
+                                        Table @order.TableId • $@order.TotalAmount.ToString("F2") • @order.Items.Count items
+                                        @if (order.User != null)
+                                        {
+                                            <br><small>Customer: @order.User.Name (@order.User.Email)</small>
+                                        }
+                                    </p>
+                                    <span class="activity-time">@order.OrderDate.ToString("MMM dd, h:mm tt")</span>
+                                </div>
+                                <div class="activity-status">
+                                    <span class="status-badge @order.Status.ToLower()">@order.Status</span>
+                                </div>
+                            </div>
+                        }
+                        else if (activity.Type == "user")
+                        {
+                            var user = (User)activity.Data;
+                            <div class="activity-item user-activity" onclick="viewUserDetails(@user.Id)">
+                                <div class="activity-icon user-icon">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div class="activity-details">
+                                    <h4>New User Account</h4>
+                                    <p>@user.Name • @user.Email • @user.Role</p>
+                                    <span class="activity-time">@user.CreatedAt.ToString("MMM dd, h:mm tt")</span>
+                                </div>
+                                <div class="activity-status">
+                                    <span class="status-badge @(user.IsActive ? "completed" : "cancelled")">@(user.IsActive ? "Active" : "Inactive")</span>
+                                </div>
+                            </div>
+                        }
+                    }
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h4>No recent activity</h4>
+                        <p>Activity will appear here as it happens</p>
+        </div>
+    }
+</div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Guest Selection Modal -->
+<div id="guestModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Select Number of Guests</h3>
+            <button class="modal-close" onclick="closeGuestModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Number of Guests</label>
+                <div class="picker-container">
+                    <div class="picker-wrapper">
+                        <div class="picker-scroll" id="guestPicker">
+                            <div class="picker-item" data-value="1">1 Guest</div>
+                            <div class="picker-item" data-value="2">2 Guests</div>
+                            <div class="picker-item" data-value="3">3 Guests</div>
+                            <div class="picker-item" data-value="4">4 Guests</div>
+                            <div class="picker-item" data-value="5">5 Guests</div>
+                            <div class="picker-item" data-value="6">6 Guests</div>
+                            <div class="picker-item" data-value="7">7 Guests</div>
+                            <div class="picker-item" data-value="8">8 Guests</div>
+                            <div class="picker-item" data-value="9">9 Guests</div>
+                            <div class="picker-item" data-value="10">10 Guests</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeGuestModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="confirmTableSelection()">Confirm</button>
+        </div>
+    </div>
+</div>
+
+</div>
+
+@section Scripts {
+    <script>
+        let selectedTableId = null;
+        let selectedGuestCount = 1;
+
+        function viewTableDetails(tableId) {
+            window.location.href = '@Url.Action("TableDetails", "Admin")?tableId=' + tableId;
+        }
+
+        function selectTable(tableId) {
+            selectedTableId = tableId;
+            document.getElementById('guestModal').classList.add('show');
+            initializePicker();
+        }
+
+        function closeGuestModal() {
+            document.getElementById('guestModal').classList.remove('show');
+            selectedTableId = null;
+        }
+
+        function initializePicker() {
+            const picker = document.getElementById('guestPicker');
+            const items = picker.querySelectorAll('.picker-item');
+            
+            // Set initial selection
+            items.forEach((item, index) => {
+                item.classList.remove('selected');
+                if (index === 0) {
+                    item.classList.add('selected');
+                    selectedGuestCount = parseInt(item.dataset.value);
+                }
+                
+                item.addEventListener('click', function() {
+                    items.forEach(i => i.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedGuestCount = parseInt(this.dataset.value);
+                });
+            });
+        }
+
+        function confirmTableSelection() {
+            if (selectedTableId && selectedGuestCount) {
+                // Redirect to table details with guest count
+                window.location.href = '@Url.Action("TableDetails", "Admin")?tableId=' + selectedTableId + '&pax=' + selectedGuestCount;
+            }
+        }
+
+        function viewUserDetails(userId) {
+            window.location.href = '@Url.Action("UserDetails", "Admin")/' + userId;
+        }
+
+        function filterActivity(type) {
+            const activityItems = document.querySelectorAll('.activity-item');
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            
+            // Update active button
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Filter activities
+            activityItems.forEach(item => {
+                if (type === 'all') {
+                    item.style.display = 'flex';
+                } else if (type === 'orders' && item.classList.contains('order-activity')) {
+                    item.style.display = 'flex';
+                } else if (type === 'users' && item.classList.contains('user-activity')) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Close welcome message function
+        function closeWelcome() {
+            const welcome = document.getElementById('floatingWelcome');
+            if (welcome) {
+                welcome.classList.add('hide');
+                setTimeout(() => welcome.remove(), 300);
+            }
+        }
+
+        // Auto-hide welcome message after 5 seconds
+        setTimeout(function() {
+            const welcome = document.getElementById('floatingWelcome');
+            if (welcome) {
+                welcome.classList.add('hide');
+                setTimeout(() => welcome.remove(), 300);
+            }
+        }, 5000);
+    </script>
+    
+}

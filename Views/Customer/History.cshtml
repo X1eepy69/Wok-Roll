@@ -1,0 +1,162 @@
+@model List<Order>
+@{
+    ViewData["Title"] = "Order History";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/customer-styles.css" />
+}
+
+<div class="order-container">
+    <div class="order-background">
+        <div class="order-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </div>
+    
+    <div class="order-content">
+        <!-- Top Navigation Bar -->
+        <div class="top-nav-bar">
+            <!-- Left: Logo and Title -->
+            <div class="nav-left">
+                <div class="order-logo">
+                    <i class="fas fa-history"></i>
+                </div>
+                <div class="order-title">
+                    <h1>Order History</h1>
+                    <span class="table-info">View your past orders</span>
+                </div>
+            </div>
+
+            <!-- Right: Action Buttons -->
+            <div class="nav-right">
+                <div class="action-buttons">
+                    <a asp-controller="Customer" asp-action="Table" class="action-btn secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back to Tables</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Content -->
+        <div class="history-content">
+            @if (Model.Any())
+            {
+                <div class="history-section">
+                    <div class="section-header">
+                        <h2>
+                            <i class="fas fa-receipt"></i>
+                            Your Order History (@Model.Count orders)
+                        </h2>
+                    </div>
+                    
+                    <div class="history-grid">
+                        @foreach (var order in Model)
+                        {
+                            <div class="history-card fade-in">
+                                <div class="history-card-header">
+                                    <div class="order-info">
+                                        <h3>Order #@order.Id</h3>
+                                        <div class="order-meta">
+                                            <span class="order-date">
+                                                <i class="fas fa-calendar"></i>
+                                                @order.OrderDate.ToString("MMMM dd, yyyy h:mm tt")
+                                            </span>
+                                            <span class="order-table">
+                                                <i class="fas fa-table"></i>
+                                                Table @order.Table.Number
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="order-status">
+                                        <span class="status-badge @(order.Status == "Completed" ? "completed" : order.Status == "Pending" ? "pending" : "cancelled")">
+                                            @order.Status
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="history-card-body">
+                                    <div class="order-items">
+                                        <h4>Order Items:</h4>
+                                        <div class="items-list">
+                                            @foreach (var item in order.Items)
+                                            {
+                                                <div class="item-row">
+                                                    <div class="item-details">
+                                                        <span class="item-name">@item.MenuItem.Name</span>
+                                                        @if (!string.IsNullOrEmpty(item.SpecialInstructions))
+                                                        {
+                                                            <span class="item-special">@item.SpecialInstructions</span>
+                                                        }
+                                                        <span class="item-quantity">Qty: @item.Quantity</span>
+                                                    </div>
+                                                    <span class="item-price">$@item.Subtotal.ToString("0.00")</span>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="order-summary">
+                                        <div class="summary-row">
+                                            <span>Subtotal:</span>
+                                            <span>$@order.Items.Sum(i => i.Subtotal).ToString("0.00")</span>
+                                        </div>
+                                        <div class="summary-row">
+                                            <span>Tax (6%):</span>
+                                            <span>$@((order.Items.Sum(i => i.Subtotal) * 0.06m).ToString("0.00"))</span>
+                                        </div>
+                                        <div class="summary-divider"></div>
+                                        <div class="summary-row total-row">
+                                            <span>Total:</span>
+                                            <span>$@order.TotalAmount.ToString("0.00")</span>
+                                        </div>
+                                        
+                                        @if (order.Payments.Any())
+                                        {
+                                            var payment = order.Payments.First();
+                                            <div class="payment-info">
+                                                <div class="payment-method">
+                                                    <i class="fas fa-credit-card"></i>
+                                                    <span>@payment.Method</span>
+                                                </div>
+                                                <div class="payment-date">
+                                                    <i class="fas fa-clock"></i>
+                                                    <span>@payment.PaymentDate.ToString("MMM dd, yyyy")</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Empty State -->
+                <div class="empty-history-section">
+                    <div class="empty-history-card">
+                        <div class="empty-history-content">
+                            <div class="empty-icon">
+                                <i class="fas fa-history"></i>
+                            </div>
+                            <h3>No order history found</h3>
+                            <p>You haven't placed any orders yet. Start your dining experience!</p>
+                            <a asp-controller="Customer" asp-action="Table" class="start-ordering-btn">
+                                <i class="fas fa-utensils"></i>
+                                <span>Start Ordering</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+}

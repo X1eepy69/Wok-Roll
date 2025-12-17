@@ -1,0 +1,356 @@
+@model List<Table>
+@{
+    ViewData["Title"] = "Select Table";
+}
+
+<div class="table-container">
+    <div class="table-background">
+        <div class="table-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+            <div class="shape shape-4"></div>
+        </div>
+    </div>
+    
+    <div class="table-content">
+        <div class="table-card">
+            <div class="table-header">
+                <div class="table-logo">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                <h1>Select Your Table</h1>
+                <p>Choose an available table to start your dining experience</p>
+            </div>
+
+            <div class="tables-grid">
+                @foreach (var table in Model)
+                {
+                    var isOwnedByCurrentSession = table.CurrentSessionId == ViewBag.CurrentSessionId;
+                    var canAccess = !table.IsOccupied || isOwnedByCurrentSession;
+                    
+                    <div class="table-item @(table.IsOccupied ? (isOwnedByCurrentSession ? "owned" : "occupied") : "available")" 
+                         onclick="selectTable(@table.Id, @table.IsOccupied.ToString().ToLower(), @isOwnedByCurrentSession.ToString().ToLower())"
+                         data-table-id="@table.Id"
+                         data-session-id="@table.CurrentSessionId"
+                         data-current-session="@ViewBag.CurrentSessionId">
+                        <div class="table-icon">
+                            <i class="fas fa-table"></i>
+                        </div>
+                        <div class="table-number">Table @table.Id</div>
+                        <div class="table-info">
+                            @if (table.IsOccupied)
+                            {
+                                if (isOwnedByCurrentSession)
+                                {
+                                    <div class="table-status owned">
+                                        <i class="fas fa-user-check"></i>
+                                        <span>Your Table</span>
+                                    </div>
+                                    <div class="table-seats">@table.Pax guests</div>
+                                    <div class="table-actions">
+                                        <button class="release-btn" onclick="event.stopPropagation(); releaseTable(@table.Id)">
+                                            <i class="fas fa-door-open"></i>
+                                            Release
+                                        </button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="table-status occupied">
+                                        <i class="fas fa-user-friends"></i>
+                                        <span>Occupied</span>
+                                    </div>
+                                    <div class="table-seats">@table.Pax guests</div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="table-status available">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Available</span>
+                                </div>
+                                <div class="table-seats">Ready for you!</div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @* Show order history for owned tables *@
+            @{
+                var ownedTables = Model.Where(t => t.IsOccupied && t.CurrentSessionId == ViewBag.CurrentSessionId).ToList();
+            }
+            @if (ownedTables.Any())
+            {
+                <div class="owned-tables-section">
+                    <div class="section-header">
+                        <h3>
+                            <i class="fas fa-receipt"></i>
+                            Your Table Orders
+                        </h3>
+                        <p>View order history for your current tables</p>
+                    </div>
+                    <div class="owned-tables-list">
+                        @foreach (var table in ownedTables)
+                        {
+                            <div class="owned-table-item">
+                                <div class="table-info">
+                                    <div class="table-name">
+                                        <i class="fas fa-table"></i>
+                                        Table @table.Id
+                                    </div>
+                                    <div class="table-guests">@table.Pax guests</div>
+                                </div>
+                                <div class="table-actions">
+                                    <a href="@Url.Action("OrderHistory", "Customer", new { tableId = table.Id })" class="btn btn-primary">
+                                        <i class="fas fa-history"></i>
+                                        View Orders
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="table-footer">
+                <a asp-controller="Home" asp-action="Index" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Guest Selection Modal -->
+<div id="tableModal" class="modal-overlay">
+    <div class="modal-backdrop"></div>
+    <div class="modal-container">
+        <div class="modal-card">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <div class="modal-header-content">
+                    <div class="modal-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="modal-title-section">
+                        <h2 class="modal-title">Pax Count</h2>
+                        <p class="modal-subtitle">How many guests will be dining?</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeTableModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <div class="guest-selection-container">
+                    <div class="guest-grid" id="guestPicker">
+                        <div class="guest-option" data-value="1">
+                            <div class="guest-icon">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span class="guest-number">1</span>
+                            <span class="guest-label">Guest</span>
+                        </div>
+                        <div class="guest-option" data-value="2">
+                            <div class="guest-icon">
+                                <i class="fas fa-user-friends"></i>
+                            </div>
+                            <span class="guest-number">2</span>
+                            <span class="guest-label">Guests</span>
+                        </div>
+                        <div class="guest-option" data-value="3">
+                            <div class="guest-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <span class="guest-number">3</span>
+                            <span class="guest-label">Guests</span>
+                        </div>
+                        <div class="guest-option" data-value="4">
+                            <div class="guest-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <span class="guest-number">4</span>
+                            <span class="guest-label">Guests</span>
+                        </div>
+                        <div class="guest-option" data-value="5">
+                            <div class="guest-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <span class="guest-number">5</span>
+                            <span class="guest-label">Guests</span>
+                        </div>
+                        <div class="guest-option" data-value="6">
+                            <div class="guest-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <span class="guest-number">6</span>
+                            <span class="guest-label">Guests</span>
+                        </div>
+                        <div class="guest-option" data-value="7">
+                            <div class="guest-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <span class="guest-number">7</span>
+                            <span class="guest-label">Guests</span>
+                        </div>
+                        <div class="guest-option" data-value="8">
+                            <div class="guest-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <span class="guest-number">8</span>
+                            <span class="guest-label">Guests</span>
+                        </div>
+                        <div class="guest-option" data-value="9">
+                            <div class="guest-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <span class="guest-number">9</span>
+                            <span class="guest-label">Guests</span>
+                        </div>
+                        <div class="guest-option" data-value="10">
+                            <div class="guest-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <span class="guest-number">10</span>
+                            <span class="guest-label">Guests</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button class="modal-btn secondary" onclick="closeTableModal()">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+                <button class="modal-btn primary" onclick="confirmTableSelection()">
+                    <i class="fas fa-check"></i>
+                    <span>Continue</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/customer-styles.css" />
+}
+
+@section Scripts {
+    <script>
+        let selectedTableId = null;
+        let selectedGuestCount = 1;
+
+        function selectTable(tableId, isOccupied, isOwnedByCurrentSession) {
+            // Check if table is occupied by someone else
+            if (isOccupied && !isOwnedByCurrentSession) {
+                alert('This table is currently occupied by another customer. Please select an available table.');
+                return;
+            }
+            
+            // If it's owned by current session, go directly to menu
+            if (isOwnedByCurrentSession) {
+                window.location.href = '@Url.Action("AddOrder", "Customer")' + '?tableId=' + tableId;
+                return;
+            }
+            
+            selectedTableId = tableId;
+            document.getElementById('tableModal').classList.add('show');
+            
+            // Initialize picker
+            initializePicker();
+        }
+
+        function closeTableModal() {
+            document.getElementById('tableModal').classList.remove('show');
+            selectedTableId = null;
+        }
+
+        function initializePicker() {
+            const picker = document.getElementById('guestPicker');
+            const items = picker.querySelectorAll('.guest-option');
+            
+            // Set initial selection
+            items.forEach((item, index) => {
+                item.classList.remove('selected');
+                if (index === 0) {
+                    item.classList.add('selected');
+                    selectedGuestCount = parseInt(item.dataset.value);
+                }
+            });
+
+            // Add click handlers
+            items.forEach(item => {
+                item.addEventListener('click', function() {
+                    items.forEach(i => i.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedGuestCount = parseInt(this.dataset.value);
+                });
+            });
+        }
+
+        function confirmTableSelection() {
+            if (!selectedTableId || !selectedGuestCount) {
+                alert('Please select a valid number of guests.');
+                return;
+            }
+
+            // Set PAX and mark table as occupied by current session
+            fetch('@Url.Action("SetPax", "Customer")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `tableId=${selectedTableId}&pax=${selectedGuestCount}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirect to menu
+                    window.location.href = '@Url.Action("AddOrder", "Customer")?tableId=' + selectedTableId;
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while selecting the table.');
+            });
+        }
+
+        function releaseTable(tableId) {
+            if (confirm('Are you sure you want to release this table? This will clear your cart and free up the table.')) {
+                fetch('@Url.Action("ReleaseTable", "Customer")', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `tableId=${tableId}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload the page to update table status
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while releasing the table.');
+                });
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('tableModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTableModal();
+            }
+        });
+    </script>
+    
+}

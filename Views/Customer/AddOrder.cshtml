@@ -1,0 +1,595 @@
+@model AddOrderViewModel
+@using DineInSystem.Models
+@{
+    ViewData["Title"] = "Order Menu - Table " + Model.TableId;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/customer-styles.css" />
+}
+
+<div class="order-container">
+    <div class="order-background">
+        <div class="order-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </div>
+    
+    <div class="order-content">
+        <!-- Top Navigation Bar -->
+        <div class="top-nav-bar">
+            <!-- Left: Logo and Title -->
+            <div class="nav-left">
+                <div class="order-logo">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                <div class="order-title">
+                    <h1>Order Menu</h1>
+                    <span class="table-info">Table @Model.TableId</span>
+                </div>
+            </div>
+
+            <!-- Center: Empty for now -->
+            <div class="nav-center">
+                <!-- Content moved to menu-grid-header -->
+            </div>
+
+            <!-- Right: Cart Button -->
+            <div class="nav-right">
+                <div class="cart-button-container">
+                    <a asp-action="Cart" asp-route-tableId="@Model.TableId" class="cart-btn" id="cartButton">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-text">Cart</span>
+                    </a>
+                    <span class="cart-badge" id="cartBadge" style="display: none;">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Grid -->
+        <div class="menu-grid-container">
+            <div class="menu-grid-header">
+                <div class="menu-grid-header-content">
+                    <div class="header-left">
+                        <h2 class="menu-grid-title">
+                            <i class="fas fa-utensils"></i>
+                            <span id="currentCategoryTitle">Our Menu</span>
+                        </h2>
+                    </div>
+                    <div class="header-controls">
+                        <div class="search-wrapper">
+                            <div class="search-input-container">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="searchInput" class="search-input" placeholder="Search dishes...">
+                            </div>
+                        </div>
+                        <div class="filter-wrapper">
+                            <select id="categorySelect" class="category-select">
+                                <option value="">All Categories</option>
+                                @if (ViewBag.Categories != null)
+                                {
+                                    @foreach (var category in ((IEnumerable<Category>)ViewBag.Categories).OrderBy(c => c.DisplayOrder).ThenBy(c => c.Name))
+                                    {
+                                        <option value="@category.Name">@category.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="menu-grid" id="menuGrid">
+                @{
+                    var groupedItems = Model.MenuItems
+                        .GroupBy(item => item.Category.Name)
+                        .OrderBy(group => group.First().Category.DisplayOrder)
+                        .ThenBy(group => group.Key);
+                }
+                @foreach (var categoryGroup in groupedItems)
+                {
+                    <div class="category-section" data-category="@categoryGroup.Key">
+                        <div class="category-section-header">
+                            <h3 class="category-title">@categoryGroup.Key</h3>
+                            <div class="category-line"></div>
+                        </div>
+                        <div class="category-items">
+                            @foreach (var item in categoryGroup.OrderBy(i => i.Name))
+                            {
+                                <div class="menu-item-card" data-category="@item.Category.Name" data-name="@item.Name.ToLower()">
+                                    <div class="menu-item-image-container">
+                                        <div class="menu-item-image">
+                                            @if (!string.IsNullOrEmpty(item.ImagePath))
+                                            {
+                                                <img src="@item.ImagePath" alt="@item.Name">
+                                            }
+                                            else
+                                            {
+                                                <div class="no-image">
+                                                    <i class="fas fa-utensils"></i>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="category-overlay">
+                                            <span class="category-badge">@item.Category.Name</span>
+                                        </div>
+                                    </div>
+                                    <div class="menu-item-content">
+                                        <div class="menu-item-header">
+                                            <h3 class="menu-item-title">@item.Name</h3>
+                                            <div class="price-tag">
+                                                <span class="menu-item-price">$@item.Price.ToString("F2")</span>
+                                            </div>
+                                        </div>
+                                        <p class="menu-item-description">@item.Description</p>
+                                        <button class="add-to-cart-btn" onclick="openAddToCartModal('@item.Id', '@item.Name', @item.Price, '@item.Category.Name')">
+                                            <i class="fas fa-shopping-cart"></i>
+                                            <span>Add to Cart</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            
+            <!-- No Results Message -->
+            <div id="noResults" class="no-results" style="display: none;">
+                <div class="no-results-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3>No items found</h3>
+                <p>Try adjusting your search or filter criteria.</p>
+            </div>
+        </div>
+        </div>
+
+        <!-- Back Button -->
+        <div class="floating-back">
+            <a asp-action="Table" class="floating-back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Add to Cart Modal -->
+<div id="addToCartModal" class="modal-overlay">
+    <div class="modal-backdrop"></div>
+    <div class="modal-container">
+        <div class="modal-card">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <div class="modal-header-content">
+                    <div class="modal-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="modal-title-section">
+                        <h2 class="modal-title" id="modalItemName">Add to Cart</h2>
+                        <p class="modal-subtitle">Customize your order</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeAddToCartModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <!-- Quantity Section -->
+                <div class="form-section">
+                    <label class="section-label">
+                        <i class="fas fa-hashtag"></i>
+                        Quantity
+                    </label>
+                    <div class="quantity-controls">
+                        <button type="button" class="qty-btn" onclick="decreaseQuantity()">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <input type="number" id="quantity" class="qty-input" value="1" min="1" max="10">
+                        <button type="button" class="qty-btn" onclick="increaseQuantity()">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Special Instructions Section -->
+                <div class="form-section">
+                    <label class="section-label">
+                        <i class="fas fa-edit"></i>
+                        Special Instructions
+                    </label>
+                    <textarea id="specialInstructions" class="text-input" rows="3" placeholder="Any special requests or modifications..."></textarea>
+                </div>
+
+                <!-- Add-ons Section -->
+                <div class="form-section">
+                    <label class="section-label">
+                        <i class="fas fa-plus-circle"></i>
+                        Add-ons
+                    </label>
+                    <div id="addonsList" class="addons-list">
+                        <div class="no-addons">
+                            <i class="fas fa-info-circle"></i>
+                            <span>No addons available for this item.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Price -->
+                <div class="total-section">
+                    <div class="total-card">
+                        <div class="total-header">
+                            <i class="fas fa-receipt"></i>
+                            <span>Order Total</span>
+                        </div>
+                        <div class="total-amount" id="totalPrice">$0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button class="modal-btn secondary" onclick="closeAddToCartModal()">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+                <button class="modal-btn primary" onclick="addToCart()">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Add to Cart</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentMenuItem = null;
+        let selectedAddons = [];
+        let addonPrices = {};
+        let addonConflicts = {}; // Store conflicting addons for each addon
+
+        // Combined filtering functionality
+        function filterMenuItems() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const categorySelect = document.getElementById('categorySelect');
+            const selectedCategory = categorySelect.value;
+            
+            const menuItems = document.querySelectorAll('.menu-item-card');
+            const categorySections = document.querySelectorAll('.category-section');
+            let visibleCount = 0;
+
+            categorySections.forEach(section => {
+                const sectionItems = section.querySelectorAll('.menu-item-card');
+                let sectionVisibleCount = 0;
+                
+                sectionItems.forEach(item => {
+                    const itemName = item.dataset.name;
+                    const itemCategory = item.dataset.category;
+                    
+                    // Check if item matches both search term AND category
+                    const matchesSearch = searchTerm === '' || itemName.includes(searchTerm);
+                    const matchesCategory = selectedCategory === '' || itemCategory === selectedCategory;
+                    
+                    if (matchesSearch && matchesCategory) {
+                        item.style.display = 'block';
+                        visibleCount++;
+                        sectionVisibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                
+                // Show/hide entire category section based on visible items
+                if (sectionVisibleCount > 0) {
+                    section.style.display = 'block';
+                } else {
+                    section.style.display = 'none';
+                }
+            });
+
+            // Update current category display
+            updateCurrentCategoryDisplay(selectedCategory);
+            
+            // Show/hide no results message
+            const noResults = document.getElementById('noResults');
+            if (visibleCount === 0) {
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
+            }
+        }
+
+        // Update current category display
+        function updateCurrentCategoryDisplay(selectedCategory) {
+            const titleElement = document.getElementById('currentCategoryTitle');
+            if (titleElement) {
+                if (selectedCategory === '') {
+                    titleElement.textContent = 'Our Menu';
+                } else {
+                    titleElement.textContent = selectedCategory;
+                }
+            }
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', filterMenuItems);
+
+        // Category filter functionality
+        document.getElementById('categorySelect').addEventListener('change', function() {
+            // Apply combined filter
+            filterMenuItems();
+        });
+
+        function openAddToCartModal(itemId, itemName, itemPrice, itemCategory) {
+            currentMenuItem = {
+                id: itemId,
+                name: itemName,
+                price: itemPrice,
+                category: itemCategory,
+                tableId: @Model.TableId
+            };
+
+            document.getElementById('modalItemName').textContent = itemName;
+            document.getElementById('quantity').value = 1;
+            document.getElementById('specialInstructions').value = '';
+            document.getElementById('totalPrice').textContent = '$' + itemPrice.toFixed(2);
+
+            // Reset addons
+            selectedAddons = [];
+            addonPrices = {};
+            addonConflicts = {};
+            document.getElementById('addonsList').innerHTML = '<p class="no-addons">Loading addons...</p>';
+
+            // Load addons for this item
+            loadAddonsForItem(itemId);
+
+            // Show modal
+            document.getElementById('addToCartModal').classList.add('show');
+        }
+
+        function loadAddonsForItem(itemId) {
+            fetch('@Url.Action("GetAddonsForMenuItem", "Customer")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `menuItemId=${itemId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                const addonsList = document.getElementById('addonsList');
+                if (data.success && data.addons && data.addons.length > 0) {
+                    addonsList.innerHTML = '';
+                    data.addons.forEach(addon => {
+                        addonPrices[addon.id] = addon.price;
+                        
+                        // Parse conflicting addons
+                        let conflicts = [];
+                        if (addon.conflictingAddons) {
+                            conflicts = addon.conflictingAddons.split(',').map(id => id.trim()).filter(id => id);
+                        }
+                        addonConflicts[addon.id] = conflicts;
+                        
+                        const addonDiv = document.createElement('div');
+                        addonDiv.className = 'addon-item';
+                        addonDiv.innerHTML = `
+                            <label class="addon-label">
+                                <input type="checkbox" value="${addon.id}" onchange="toggleAddon(${addon.id}, ${addon.price})">
+                                <span class="addon-name">${addon.name}</span>
+                                <span class="addon-price">+$${addon.price.toFixed(2)}</span>
+                            </label>
+                        `;
+                        addonsList.appendChild(addonDiv);
+                    });
+                } else {
+                    addonsList.innerHTML = '<p class="no-addons">No addons available for this item.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading addons:', error);
+                document.getElementById('addonsList').innerHTML = '<p class="no-addons">Error loading addons.</p>';
+            });
+        }
+
+        function toggleAddon(addonId, addonPrice) {
+            const checkbox = document.querySelector(`input[value="${addonId}"]`);
+            if (checkbox.checked) {
+                if (!selectedAddons.includes(addonId)) {
+                    selectedAddons.push(addonId);
+                }
+                
+                // Apply bidirectional conflicts
+                applyConflictingAddons();
+            } else {
+                selectedAddons = selectedAddons.filter(id => id !== addonId);
+                
+                // Re-evaluate all conflicts after removal
+                applyConflictingAddons();
+            }
+            updateTotalPrice();
+        }
+
+        function applyConflictingAddons() {
+            // Reset all addons to enabled state first
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.disabled = false;
+                cb.closest('.addon-item').classList.remove('conflicting-disabled');
+            });
+
+            // For each selected addon, disable its conflicts
+            selectedAddons.forEach(selectedId => {
+                const conflicts = addonConflicts[selectedId] || [];
+                conflicts.forEach(conflictId => {
+                    const conflictCheckbox = document.querySelector(`input[value="${conflictId}"]`);
+                    if (conflictCheckbox) {
+                        conflictCheckbox.disabled = true;
+                        conflictCheckbox.checked = false;
+                        // Remove from selectedAddons if it was selected
+                        selectedAddons = selectedAddons.filter(id => id !== conflictId);
+                        conflictCheckbox.closest('.addon-item').classList.add('conflicting-disabled');
+                    }
+                });
+
+                // Also check if this selected addon conflicts with any other selected addon
+                selectedAddons.forEach(otherSelectedId => {
+                    if (otherSelectedId !== selectedId) {
+                        const otherConflicts = addonConflicts[otherSelectedId] || [];
+                        if (otherConflicts.includes(selectedId)) {
+                            // This addon conflicts with another selected addon, so disable it
+                            const selectedCheckbox = document.querySelector(`input[value="${selectedId}"]`);
+                            if (selectedCheckbox) {
+                                selectedCheckbox.disabled = true;
+                                selectedCheckbox.checked = false;
+                                selectedAddons = selectedAddons.filter(id => id !== selectedId);
+                                selectedCheckbox.closest('.addon-item').classList.add('conflicting-disabled');
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        function closeAddToCartModal() {
+            document.getElementById('addToCartModal').classList.remove('show');
+            currentMenuItem = null;
+        }
+
+        function increaseQuantity() {
+            const quantityInput = document.getElementById('quantity');
+            const currentValue = parseInt(quantityInput.value);
+            if (currentValue < 10) {
+                quantityInput.value = currentValue + 1;
+                updateTotalPrice();
+            }
+        }
+
+        function decreaseQuantity() {
+            const quantityInput = document.getElementById('quantity');
+            const currentValue = parseInt(quantityInput.value);
+            if (currentValue > 1) {
+                quantityInput.value = currentValue - 1;
+                updateTotalPrice();
+            }
+        }
+
+        function updateTotalPrice() {
+            if (!currentMenuItem) return;
+            
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const addonTotal = selectedAddons.reduce((sum, addonId) => sum + (addonPrices[addonId] || 0), 0);
+            const totalPrice = (currentMenuItem.price + addonTotal) * quantity;
+            
+            document.getElementById('totalPrice').textContent = '$' + totalPrice.toFixed(2);
+        }
+
+        function addToCart() {
+            if (!currentMenuItem) return;
+
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const specialInstructions = document.getElementById('specialInstructions').value;
+            const selectedAddonsString = selectedAddons.join(',');
+
+            // Show loading state
+            const addButton = event.target;
+            const originalText = addButton.innerHTML;
+            addButton.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite;"></span> Adding...';
+            addButton.disabled = true;
+
+            // Make API call
+            fetch('@Url.Action("AddToCartWithAddons", "Customer")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `TableId=${currentMenuItem.tableId}&MenuItemId=${currentMenuItem.id}&quantity=${quantity}&specialInstructions=${encodeURIComponent(specialInstructions)}&selectedAddons=${selectedAddonsString}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeAddToCartModal();
+                    showSuccessMessage(`${currentMenuItem?.name || 'Item'} added to cart!`);
+                    updateCartBadge(data.cartCount);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while adding to cart.');
+            })
+            .finally(() => {
+                addButton.innerHTML = originalText;
+                addButton.disabled = false;
+            });
+        }
+
+        function showSuccessMessage(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success fade-in';
+            alertDiv.innerHTML = `<i class="fas fa-check-circle"></i>${message}`;
+            
+            const container = document.querySelector('.order-card');
+            if (container) {
+                container.insertBefore(alertDiv, container.firstChild);
+            }
+            
+            setTimeout(() => {
+                alertDiv.style.opacity = '0';
+                setTimeout(() => alertDiv.remove(), 300);
+            }, 3000);
+        }
+
+        function updateCartBadge(count) {
+            const badge = document.getElementById('cartBadge');
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('addToCartModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddToCartModal();
+            }
+        });
+
+        // Update total price when quantity changes
+        document.getElementById('quantity').addEventListener('input', updateTotalPrice);
+
+        // Initialize cart badge on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCartCount();
+        });
+
+        // Refresh cart count when page becomes visible (user returns from cart page)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                loadCartCount();
+            }
+        });
+
+        // Also refresh when window regains focus
+        window.addEventListener('focus', function() {
+            loadCartCount();
+        });
+
+        function loadCartCount() {
+            fetch('@Url.Action("GetCartCount", "Customer")?tableId=@Model.TableId', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateCartBadge(data.cartCount);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading cart count:', error);
+            });
+        }
+    </script>
+}

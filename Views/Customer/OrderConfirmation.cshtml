@@ -1,0 +1,159 @@
+@model Order
+@{
+    ViewData["Title"] = "Order Confirmation";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/customer-styles.css" />
+}
+
+<div class="order-container">
+    <div class="order-background">
+        <div class="order-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </div>
+    
+    <div class="order-content">
+        <!-- Top Navigation Bar -->
+        <div class="top-nav-bar">
+            <!-- Left: Logo and Title -->
+            <div class="nav-left">
+                <div class="order-logo">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="order-title">
+                    <h1>Order Confirmed!</h1>
+                    <span class="table-info">Thank you for your order</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation Content -->
+        <div class="confirmation-content">
+            <div class="confirmation-card">
+                <div class="confirmation-header">
+                    <div class="success-icon">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <h2>Order Successfully Placed!</h2>
+                    <p>Your order has been confirmed and is being prepared by our kitchen team.</p>
+                </div>
+                
+                <div class="confirmation-body">
+                    <div class="order-details-grid">
+                        <div class="order-info-section">
+                            <h3>
+                                <i class="fas fa-receipt"></i>
+                                Order Details
+                            </h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">Order ID:</span>
+                                    <span class="info-value">#@Model.Id</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Table:</span>
+                                    <span class="info-value">@Model.Table.Number</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Order Date:</span>
+                                    <span class="info-value">@Model.OrderDate.ToString("MMMM dd, yyyy h:mm tt")</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Status:</span>
+                                    <span class="status-badge @(Model.Status == "Completed" ? "completed" : Model.Status == "Pending" ? "pending" : "cancelled")">@Model.Status</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-info-section">
+                            <h3>
+                                <i class="fas fa-credit-card"></i>
+                                Payment Information
+                            </h3>
+                            @if (Model.Payments.Any())
+                            {
+                                var payment = Model.Payments.First();
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <span class="info-label">Payment Method:</span>
+                                        <span class="info-value">@payment.Method</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Payment Date:</span>
+                                        <span class="info-value">@payment.PaymentDate.ToString("MMMM dd, yyyy h:mm tt")</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Amount Paid:</span>
+                                        <span class="info-value total-amount">$@payment.Amount.ToString("0.00")</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="order-items-section">
+                        <h3>
+                            <i class="fas fa-list"></i>
+                            Order Items
+                        </h3>
+                        <div class="items-table">
+                            <div class="table-header">
+                                <div class="col-item">Item</div>
+                                <div class="col-quantity">Qty</div>
+                                <div class="col-price">Price</div>
+                                <div class="col-total">Total</div>
+                            </div>
+                            @foreach (var item in Model.Items)
+                            {
+                                <div class="table-row">
+                                    <div class="col-item">
+                                        <span class="item-name">@item.MenuItem.Name</span>
+                                        @if (!string.IsNullOrEmpty(item.SpecialInstructions))
+                                        {
+                                            <span class="item-special">@item.SpecialInstructions</span>
+                                        }
+                                    </div>
+                                    <div class="col-quantity">@item.Quantity</div>
+                                    <div class="col-price">$@item.MenuItem.Price.ToString("0.00")</div>
+                                    <div class="col-total">$@item.Subtotal.ToString("0.00")</div>
+                                </div>
+                            }
+                            <div class="table-footer">
+                                <div class="summary-row">
+                                    <span>Subtotal:</span>
+                                    <span>$@Model.Items.Sum(i => i.Subtotal).ToString("0.00")</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Tax (6%):</span>
+                                    <span>$@((Model.Items.Sum(i => i.Subtotal) * 0.06m).ToString("0.00"))</span>
+                                </div>
+                                <div class="summary-row total-row">
+                                    <span>Total:</span>
+                                    <span>$@Model.TotalAmount.ToString("0.00")</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="confirmation-actions">
+                        <a asp-controller="Customer" asp-action="AddOrder" asp-route-tableId="@Model.TableId" class="action-btn primary">
+                            <i class="fas fa-utensils"></i>
+                            <span>Place Another Order</span>
+                        </a>
+                        <a asp-controller="Customer" asp-action="History" class="action-btn secondary">
+                            <i class="fas fa-history"></i>
+                            <span>View Order History</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+}
